@@ -5,14 +5,14 @@ AsciiPack is an object serialization inspired by MessagePack.
 AsciiPack is use easy by Web. because all serialize object is only writed ascii strings.
 
     JSON is 27 chars:
-    {"compact":true,"schema":0}
+    {"compact":true,"binary":0}
 
     AsciiPack is 22 chars:
-    q2m7compactum6schemaf0
+    q2m7compactum6binaryf0
         q2 => map of length 2.
         m7compact => str of length 7 and value is "compact". and map key.
         u => true. and map value.
-        m6schema => str of length 6 abd value is "schema". and map key.
+        m6binary => str of length 6 abd value is "binary". and map key.
         f0 => int value is 0.
 
 ## Formats
@@ -20,7 +20,7 @@ AsciiPack is use easy by Web. because all serialize object is only writed ascii 
 ### Overview
 
 <table>
-  <tr><th>format name</th><th>first char</th><th>base decimal of length</th></tr>
+  <tr><th>format name</th><th>first char</th><th>base decimal</th></tr>
   <tr><td>int 4</td><td>a</td><td>16</td></tr>
   <tr><td>int 8</td><td>b</td><td>16</td></tr>
   <tr><td>int 16</td><td>c</td><td>16</td></tr>
