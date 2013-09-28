@@ -50,70 +50,63 @@ this.AsciiPack = this.AsciiPack || (function(){
       while (len--) zero += '0';
       return type + zero + hex + str;
     };
-    var sign, exp, frac, low, high;
-    var number = function(obj){
-      if (obj !== obj) {
-        return typemap.float64 + '7ff0000000000000';
-      } else if (obj === Number.POSITIVE_INFINITY) {
-        return typemap.float64 + '7ff0000000000000';
-      } else if (obj === Number.NEGATIVE_INFINITY) {
-        return typemap.float64 + 'fff0000000000000';
-      } else if (Math.floor(obj) === obj) {
-        if (0 <= obj) {
-          if (obj < 0x10) {
-            return format_uint(typemap.uint4, 1, obj);
-          } else if (obj < 0x100) {
-            return format_uint(typemap.uint8, 2, obj);
-          } else if (obj < 0x10000) {
-            return format_uint(typemap.uint16, 4, obj);
-          } else if (obj < 0x100000000) {
-            return format_uint(typemap.uint32, 8, obj);
-          } else if (obj < 0x10000000000000000) {
-            return format_uint(typemap.uint64, 16, obj);
-          } else {
-            return typemap.uint64 + obj.toString(16);
-          }
-        } else {
-          if (-0x8 < obj) {
-            return typemap.int4 + ((obj & 0xf).toString(16));
-          } else if (-0x80 < obj) {
-            return typemap.int8 + ((obj & 0xff).toString(16));
-          } else if (-0x8000 < obj) {
-            return typemap.int16 + toString16([
-              (obj >> 8) & 0xff, (obj) & 0xff
-            ]);
-          } else if (-0x80000000 < obj) {
-            return typemap.int32 + toString16([
-              (obj >> 24) & 0xff, (obj >> 16) & 0xff,
-              (obj >> 8)  & 0xff, (obj)       & 0xff
-            ]);
-          } else {
-            high = Math.floor(obj * Math.pow(2, -256));
-            low = obj & 0xffffffff;
-            return typemap.int64 + toString16([
-              (high >> 24) & 0xff, (high >> 16) & 0xff,
-              (high >> 8)  & 0xff, (high)       & 0xff,
-              (low >> 24)  & 0xff, (low >> 16)  & 0xff,
-              (low >> 8)   & 0xff, (low)        & 0xff
-            ]);
-          }
-        }
-      } else {
-        sign = obj < 0;
-        if (sign) obj *= -1;
-        exp = ((Math.log(obj) / Math.LN2) + 1023) | 0;
-        frac = obj * Math.pow(2, 52 + 1023 - exp);
-        low = frac & 0xffffffff;
-        if (sign) exp |= 0x800;
-        high = ((frac / 0x100000000) & 0xfffff) | (exp << 20);
+    var uint4 = function(obj){
+      return format_uint(typemap.uint4, 1, obj);
+    };
+    var uint8 = function(obj){
+      return format_uint(typemap.uint8, 2, obj);
+    };
+    var uint16 = function(obj){
+      return format_uint(typemap.uint16, 4, obj);
+    };
+    var uint32 = function(obj){
+      return format_uint(typemap.uint32, 8, obj);
+    };
+    var uint64 = function(obj){
+      return format_uint(typemap.uint64, 16, obj);
+    };
+    var int4 = function(obj){
+      return typemap.int4 + ((obj & 0xf).toString(16));
+    };
+    var int8 = function(obj){
+      return typemap.int8 + ((obj & 0xff).toString(16));
+    };
+    var int16 = function(obj){
+      return typemap.int16 + toString16([
+        (obj >> 8) & 0xff, (obj) & 0xff
+      ]);
+    };
+    var int32 = function(obj){
+      return typemap.int32 + toString16([
+        (obj >> 24) & 0xff, (obj >> 16) & 0xff,
+        (obj >> 8)  & 0xff, (obj)       & 0xff
+      ]);
+    };
+    var int64 = function(obj){
+      var high = Math.floor(obj * Math.pow(2, -256));
+      var low = obj & 0xffffffff;
+      return typemap.int64 + toString16([
+        (high >> 24) & 0xff, (high >> 16) & 0xff,
+        (high >> 8)  & 0xff, (high)       & 0xff,
+        (low >> 24)  & 0xff, (low >> 16)  & 0xff,
+        (low >> 8)   & 0xff, (low)        & 0xff
+      ]);
+    };
+    var float64 = function(obj){
+      var sign = obj < 0;
+      if (sign) obj *= -1;
+      var exp = ((Math.log(obj) / Math.LN2) + 1023) | 0;
+      var frac = obj * Math.pow(2, 52 + 1023 - exp);
+      var low = frac & 0xffffffff;
+      if (sign) exp |= 0x800;
+      var high = ((frac / 0x100000000) & 0xfffff) | (exp << 20);
 
-        return typemap.float64 + toString16([
-          (high >> 24) & 0xff, (high >> 16) & 0xff,
-          (high >>  8) & 0xff, (high)       & 0xff,
-          (low  >> 24) & 0xff, (low  >> 16) & 0xff,
-          (low  >>  8) & 0xff, (low)        & 0xff
-        ]);
-      }
+      return typemap.float64 + toString16([
+        (high >> 24) & 0xff, (high >> 16) & 0xff,
+        (high >>  8) & 0xff, (high)       & 0xff,
+        (low  >> 24) & 0xff, (low  >> 16) & 0xff,
+        (low  >>  8) & 0xff, (low)        & 0xff
+      ]);
     };
     var map = function(obj){
       var keys = [];
@@ -162,7 +155,45 @@ this.AsciiPack = this.AsciiPack || (function(){
         }
 
       case '[object Number]':
-        return number(obj);
+        if (obj !== obj) { // NaN
+          return typemap.float64 + '7ff0000000000000';
+        } else if (obj === Number.POSITIVE_INFINITY) {
+          return typemap.float64 + '7ff0000000000000';
+        } else if (obj === Number.NEGATIVE_INFINITY) {
+          return typemap.float64 + 'fff0000000000000';
+        } else if (Math.floor(obj) === obj) {
+          if (0 <= obj) {
+            if (obj < 0x10) {
+              return uint4(obj);
+            } else if (obj < 0x100) {
+              return uint8(obj);
+            } else if (obj < 0x10000) {
+              return uint16(obj);
+            } else if (obj < 0x100000000) {
+              return uint32(obj);
+            } else if (obj < 0x10000000000000000) {
+              return uint64(obj);
+            } else {
+              throw new RangeError("pack size limit over");
+            }
+          } else {
+            if (-0x8 < obj) {
+              return int4(obj);
+            } else if (-0x80 < obj) {
+              return int8(obj);
+            } else if (-0x8000 < obj) {
+              return int16(obj);
+            } else if (-0x80000000 < obj) {
+              return int32(obj);
+            } else if (-0x8000000000000000 < obj){
+              return int64(obj);
+            } else {
+              throw new RangeError("pack size limit over");
+            }
+          }
+        } else {
+          return float64(obj);
+        }
 
       case '[object String]':
         if (obj.length < 0x10) {
@@ -173,6 +204,8 @@ this.AsciiPack = this.AsciiPack || (function(){
           return str16(obj);
         } else if (obj.length < 0x100000000) {
           return str32(obj);
+        } else {
+          throw new RangeError("pack size limit over");
         }
       };
     };
@@ -210,16 +243,16 @@ this.AsciiPack = this.AsciiPack || (function(){
       return parseInt(next(), 16);
     };
     var uint8 = function(){
-      return parseInt('' + cut(2), 16);
+      return parseInt(cut(2), 16);
     };
     var uint16 = function(){
-      return parseInt('' + cut(4), 16);
+      return parseInt(cut(4), 16);
     };
     var uint32 = function(){
-      return parseInt('' + cut(8), 16);
+      return parseInt(cut(8), 16);
     };
     var uint64 = function(){
-      return parseInt('' + cut(16), 16);
+      return parseInt(cut(16), 16);
     };
     var int4 = function(){
       next();
@@ -274,27 +307,19 @@ this.AsciiPack = this.AsciiPack || (function(){
     };
     var str4 = function () {
       var len = parseInt(cut(1), 16);
-      var ret = ap.substr(at, len);
-      at += len;
-      return ret;
+      return cut(len);
     };
     var str8 = function () {
       var len = parseInt(cut(2), 16);
-      var ret = ap.substr(at, len);
-      at += len;
-      return ret;
+      return cut(len);
     };
     var str16 = function () {
       var len = parseInt(cut(4), 16);
-      var ret = ap.substr(at, len);
-      at += len;
-      return ret;
+      return cut(len);
     };
     var str32 = function () {
       var len = parseInt(cut(8), 16);
-      var ret = ap.substr(at, len);
-      at += len;
-      return ret;
+      return cut(len);
     };
 
     var _unpack = function(){
