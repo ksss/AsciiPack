@@ -15,5 +15,10 @@
     "serialize"
   ],
   "author": "ksss",
-  "license": "MIT"
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/ksss/AsciiPack/blob/master/js/LICENSE.txt"
+    }
+  ]
 }
