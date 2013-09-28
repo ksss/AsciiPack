@@ -1,0 +1,19 @@
+{
+  "name": "asciipack",
+  "version": "0.0.2",
+  "description": "AsciiPack is an object serialization inspired by MessagePack.",
+  "main": "asciipack.js",
+  "scripts": {
+    "test": "node test-node.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ksss/AsciiPack/tree/master/js"
+  },
+  "keywords": [
+    "MessagePack",
+    "serialize"
+  ],
+  "author": "ksss",
+  "license": "MIT"
+}
