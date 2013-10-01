@@ -37,9 +37,9 @@ this.AsciiPack = this.AsciiPack || (function(){
       }).join('');
     };
     var format_uint = function(type, length, num){
-      var zero = '';
       var hex = num.toString(16);
       var len = length - hex.length;
+      var zero = '';
       while(len--) zero += '0';
       return type + zero + hex;
     };
@@ -156,7 +156,7 @@ this.AsciiPack = this.AsciiPack || (function(){
 
       case '[object Number]':
         if (obj !== obj) { // NaN
-          return typemap.float64 + '7ff0000000000000';
+          return typemap.float64 + '7fffffffffffffff';
         } else if (obj === Number.POSITIVE_INFINITY) {
           return typemap.float64 + '7ff0000000000000';
         } else if (obj === Number.NEGATIVE_INFINITY) {
@@ -177,15 +177,15 @@ this.AsciiPack = this.AsciiPack || (function(){
               throw new RangeError("pack size limit over");
             }
           } else {
-            if (-0x8 < obj) {
+            if (-0x8 <= obj) {
               return int4(obj);
-            } else if (-0x80 < obj) {
+            } else if (-0x80 <= obj) {
               return int8(obj);
-            } else if (-0x8000 < obj) {
+            } else if (-0x8000 <= obj) {
               return int16(obj);
-            } else if (-0x80000000 < obj) {
+            } else if (-0x80000000 <= obj) {
               return int32(obj);
-            } else if (-0x8000000000000000 < obj){
+            } else if (-0x8000000000000000 <= obj){
               return int64(obj);
             } else {
               throw new RangeError("pack size limit over");
@@ -228,6 +228,7 @@ this.AsciiPack = this.AsciiPack || (function(){
     var cut = function(len){
       var ret = ap.substr(at, len);
       at += len;
+      ch = ap[at - 1];
       return ret;
     };
     var length = function(){
@@ -280,11 +281,20 @@ this.AsciiPack = this.AsciiPack || (function(){
       return (c[0] < 0x8) ? i : i - 0x10000000000000000;
     };
     var float64 = function(){
-      var num = parseInt(cut(3), 16);
+      var hex = cut(3);
+      var num = parseInt(hex, 16);
       var sign = num & 0x800;
       var exp = (num & 0x7ff) - 1023;
       var frac = parseInt(cut(13), 16) * Math.pow(2, -52);
-      return (sign ? -1 : 1) * (Math.pow(2, exp)) * (frac + 1);
+      if (hex === '7ff' && frac !== 0) {
+        return Number.NaN;
+      } else if (hex === '7ff' && frac === 0) {
+        return Number.POSITIVE_INFINITY;
+      } else if (hex === 'fff' && frac === 0) {
+        return Number.NEGATIVE_INFINITY;
+      } else {
+        return (sign ? -1 : 1) * (Math.pow(2, exp)) * (frac + 1);
+      }
     };
     var map = function(){
       next();
