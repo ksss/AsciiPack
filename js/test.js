@@ -14,72 +14,46 @@ this.run = (function(){
       assert.deepEqual(AsciiPack.unpack(ap), intro);
     },
     "int4": function(){
-      for (var i = 1; i < 4; i++) {
-        var n = -Math.pow(2,i) + 1;
-        var ap = AsciiPack.pack(n);
-        assert.equal(ap, t.int4 + (n & 0xf).toString(16));
-        assert.equal(AsciiPack.unpack(ap), n);
-      }
+      format(-1, t.int4, 2);
+      format(-8, t.int4, 2);
     },
     "int8": function(){
-      for (var i = 4; i < 8; i++) {
-        var n = -Math.pow(2,i) + 1;
-        var ap = AsciiPack.pack(n);
-        assert.equal(ap, t.int8 + (n & 0xff).toString(16));
-        assert.equal(AsciiPack.unpack(ap), n);
-      }
+      format(-0x9, t.int8, 3);
+      format(-0x80, t.int8, 3);
     },
     "int16": function(){
-      for (var i = 8; i < 16; i++) {
-        var n = -Math.pow(2,i) + 1;
-        var ap = AsciiPack.pack(n);
-        assert.equal(ap, t.int16 + (n & 0xffff).toString(16));
-        assert.equal(AsciiPack.unpack(ap), n);
-      }
+      format(-0x81, t.int16, 5);
+      format(-0x8000, t.int16, 5);
     },
     "int32": function(){
-      for (var i = 16; i < 32; i++) {
-        var n = -Math.pow(2,i) + 1;
-        var ap = AsciiPack.pack(n);
-        // FIXME Accuracy problem
-        // assert.equal(ap, t.int32 + (n & 0xffffffff).toString(16));
-        assert.equal(AsciiPack.unpack(ap), n);
-      }
+      format(-0x8001, t.int32, 9);
+      format(-0x80000000, t.int32, 9);
     },
-    // FIXME Accuracy problem
-    // "int64": function(){
-    //   for (var i = 32; i < 64; i++) {
-    //     var n = -Math.pow(2,i) + 1;
-    //     var ap = AsciiPack.pack(n);
-    //     assert.equal(ap, t.int64 + (n & 0xffffffffffffffff).toString(16));
-    //     assert.equal(AsciiPack.unpack(ap), n);
-    //   }
-    // },
+    "int64": function(){
+      format(-0x80000001, t.int64, 17);
+      // FIXME Accuracy problem
+      // format(-0x800000000000000000000, t.int64, 17);
+    },
     "uint4": function(){
-      check_uint(t.uint4, [0, 4]);
+      format(0, t.uint4, 2);
+      format(0xf, t.uint4, 2);
     },
     "uint8": function(){
-      check_uint(t.uint8, [4, 8]);
+      format(0x10, t.uint8, 3);
+      format(0xff, t.uint8, 3);
     },
     "uint16": function(){
-      check_uint(t.uint16 + '0', [8, 12]);
-      check_uint(t.uint16, [12, 16]);
+      format(0x100, t.uint16, 5);
+      format(0xffff, t.uint16, 5);
     },
     "uint32": function(){
-      check_uint(t.uint32 + '000', [16, 20]);
-      check_uint(t.uint32 + '00',  [20, 24]);
-      check_uint(t.uint32 + '0',   [24, 28]);
-      check_uint(t.uint32,         [28, 32]);
+      format(0x10000, t.uint32, 9);
+      format(0xffffffff, t.uint32, 9);
     },
     "uint64": function(){
-      check_uint(t.uint64 + '0000000', [32, 36]);
-      check_uint(t.uint64 + '000000',  [36, 40]);
-      check_uint(t.uint64 + '00000',   [40, 44]);
-      check_uint(t.uint64 + '0000',    [44, 48]);
-      check_uint(t.uint64 + '000',     [48, 52]);
-      check_uint(t.uint64 + '00',      [52, 56]);
-      check_uint(t.uint64 + '0',       [56, 60]);
-      check_uint(t.uint64,             [60, 64]);
+      format(0x100000000, t.uint64, 17);
+      // FIXME Accuracy problem
+      // format(0xffffffffffffffff, t.uint64, 17);
     },
     "float64": function(){
       var rets = [
@@ -87,16 +61,21 @@ this.run = (function(){
         [1.0000000000000002, '3ff0000000000001'],
         [1.0000000000000004, '3ff0000000000002'],
         [1/3, '3fd5555555555555'],
-        [Number.POSITIVE_INFINITY,'7ff0000000000000'],
-        [Number.NEGATIVE_INFINITY,'fff0000000000000']
+        [Number.POSITIVE_INFINITY, '7ff0000000000000'],
+        [Number.NEGATIVE_INFINITY, 'fff0000000000000']
       ];
       for (var i = 0; i < rets.length; i++) {
         var ap = AsciiPack.pack(rets[i][0]);
         assert.equal(ap, t.float64+rets[i][1]);
         assert.equal(AsciiPack.unpack(ap), rets[i][0]);
       }
+      var nan = AsciiPack.pack(Number.NaN);
+      assert.equal(nan, t.float64 + '7fffffffffffffff');
+      assert.equal(Number.isNaN(AsciiPack.unpack(nan)), true);
     },
     "map": function(){
+      format({}, t.map, 2);
+
       var hash = {
         "foo": {
           "bar": {
@@ -110,6 +89,8 @@ this.run = (function(){
       assert.deepEqual(AsciiPack.unpack(ap), hash);
     },
     "array": function(){
+      format([], t.array, 2);
+
       var array = [1,2,3,[4,5,[6]]];
       var ap = AsciiPack.pack(array);
 
@@ -117,10 +98,12 @@ this.run = (function(){
       assert.deepEqual(AsciiPack.unpack(ap), array);
     },
     "str4":function(){
-      check_str(t.str4, 0xf);
+      format("", t.str4, 2);
+      format((new Array(0x10)).join('a'), t.str4, 17);
     },
     "str8":function(){
-      check_str(t.str8, 0xff);
+      format((new Array(0x11)).join('a'), t.str8, 3 + 0x10);
+      format((new Array(0x100)).join('a'), t.str8, 3 + 0xff);
     },
     "str16":function(){
       check_str(t.str16 + '0', 0xfff);
@@ -188,6 +171,11 @@ this.run = (function(){
       fn();
     }
     console.log(name + ': ' + (new Date - t) + 'ms');
+  };
+  function format (object, first, length) {
+    var ap = AsciiPack.pack(object);
+    assert.equal(ap[0], first);
+    assert.equal(ap.length, length);
   };
   function check_uint (type, from_to) {
     for (var i = from_to[0]; i < from_to[1]; i++) {
