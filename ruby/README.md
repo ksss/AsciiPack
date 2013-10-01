@@ -1,5 +1,7 @@
 # AsciiPack
 
+[![Gem Version](https://badge.fury.io/rb/asciipack.png)](http://badge.fury.io/rb/asciipack)
+
 ## Synopsis
 
 ```ruby
