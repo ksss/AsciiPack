@@ -7,10 +7,10 @@
 ```ruby
 demo = {"compact"=>true,"binary"=>0}
 ap = AsciiPack.pack demo
-p ap //=> "q2m7compactum6binaryf0"
+p ap #=> "q2m7compactum6binaryf0"
 
 unpacked = AsciiPack.unpack ap
-p unpacked //=> {"compact"=>true,"binary"=>0}
+p unpacked #=> {"compact"=>true,"binary"=>0}
 ```
 
 ## Install
