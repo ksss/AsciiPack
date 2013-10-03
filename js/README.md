@@ -1,5 +1,7 @@
 # AsciiPack
 
+[![NPM version](https://badge.fury.io/js/asciipack.png)](http://badge.fury.io/js/asciipack)
+
 ## Synopsis
 
 ```javascript
