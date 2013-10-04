@@ -1,3 +1,3 @@
 require "asciipack/version"
-require 'asciipack/pack.rb'
-require 'asciipack/unpack.rb'
+require 'asciipack/packer.rb'
+require 'asciipack/unpacker.rb'
