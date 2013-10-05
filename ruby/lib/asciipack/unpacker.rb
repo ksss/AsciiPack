@@ -40,7 +40,7 @@ private
 
     def move
       @ch = @ap[@at]
-      @at = @at + 1
+      @at += 1
       @ch
     end
 
@@ -59,42 +59,42 @@ private
 
     def length
       ret = []
-      while (/\d/ =~ @ch)
+      while /\d/ =~ @ch
         ret << @ch
-        move()
+        move
       end
-      back()
+      back
       ret.join('').to_i
     end
 
     def int4
       move
       i = @ch.to_i(16)
-      return (@ch[0].to_i(16) < 0x8) ? i : i - 0x10;
+      (@ch[0].to_i(16) < 0x8) ? i : i - 0x10;
     end
 
     def int8
       c = cut(2)
       i = c.to_i(16)
-      return (c[0].to_i(16) < 0x8) ? i : i - 0x100;
+      (c[0].to_i(16) < 0x8) ? i : i - 0x100;
     end
 
     def int16
       c = cut(4)
       i = c.to_i(16)
-      return (c[0].to_i(16) < 0x8) ? i : i - 0x10000;
+      (c[0].to_i(16) < 0x8) ? i : i - 0x10000;
     end
 
     def int32
       c = cut(8)
       i = c.to_i(16)
-      return (c[0].to_i(16) < 0x8) ? i : i - 0x100000000;
+      (c[0].to_i(16) < 0x8) ? i : i - 0x100000000;
     end
 
     def int64
       c = cut(16)
       i = c.to_i(16)
-      return (c[0].to_i(16) < 0x8) ? i : i - 0x10000000000000000;
+      (c[0].to_i(16) < 0x8) ? i : i - 0x10000000000000000;
     end
 
     def uint4
@@ -139,8 +139,7 @@ private
     def map
       move
       hash = {}
-      len = length()
-      len.times {
+      length.times {
         key = unpack
         hash[key] = unpack
       }
@@ -150,8 +149,7 @@ private
     def array
       move
       array = []
-      len = length()
-      len.times {
+      length.times {
         array << unpack
       }
       array
