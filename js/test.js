@@ -106,102 +106,42 @@ this.run = (function(){
       format((new Array(0x100)).join('a'), t.str8, 3 + 0xff);
     },
     "str16":function(){
-      check_str(t.str16 + '0', 0xfff);
-      check_str(t.str16,       0xffff);
+      format((new Array(0x101)).join('a'), t.str16, 5 + 0x100);
+      format((new Array(0x10000)).join('a'), t.str16, 5 + 0xffff);
     },
     "str32":function(){
-      check_str(t.str32 + '000', 0xfffff);
-      check_str(t.str32 + '00',  0xffffff);
-      check_str(t.str32 + '0',   0xfffffff);
+      format((new Array(0x10001)).join('a'), t.str32, 9 + 0x10000);
       // FIXME Invalid array length
-      // check_str(t.str32,         0xffffffff);
+      // format((new Array(0x100000000)).join('a'), t.str32, 9 + 0xffffffff);
     },
     "nil": function(){
-      var nil = null;
-      var ap = AsciiPack.pack(nil);
-      assert.equal(ap, t.nil);
-      assert.equal(AsciiPack.unpack(ap), null);
+      format(null, t.nil, 1);
     },
-    "mix": function(){
-      var hash = {};
-      var str16 = (new Array(0x1000)).join('a');
-      for (var i = 0; i < 50; i++) {
-        var rand = i % 8;
-        hash[i] = {
-          0: [0,1,2,3,4,5,6,7,8,9],
-          1: Math.random() + (Math.random() - 0.5) * 100000000,
-          2: {hash:JSON.parse(JSON.stringify(hash))},
-          3: '123abc',
-          4: str16,
-          5: null,
-          6: false,
-          7: true,
-        }[rand];
-      }
-      console.log("benchmark of mix object...");
-      json_stringpack(hash);
-    }
+    "false": function(){
+      format(false, t.false, 1);
+    },
+    "true": function(){
+      format(true, t.true, 1);
+    },
   };
 
-  function json_stringpack(obj){
-    var lens = {}, ap, json;
-
-    assert.deepEqual(AsciiPack.unpack(AsciiPack.pack(obj)), obj);
-
-    bench("AsciiPack.pack", function(){
-      ap = AsciiPack.pack(obj);
-    });
-    bench("AsciiPack.unpack", function(){
-      AsciiPack.unpack(ap);
-    });
-    lens.asciipack_length = ap.length;
-
-    bench("JSON.stringify", function(){
-      json = JSON.stringify(obj);
-    });
-    bench("JSON.parse", function(){
-      JSON.parse(json);
-    });
-    lens.json_length = json.length;
-    console.log(lens);
-  };
-  function bench(name, fn){
-    var t = new Date();
-    for(var i = 0; i < 100; i++) {
-      fn();
-    }
-    console.log(name + ': ' + (new Date - t) + 'ms');
-  };
   function format (object, first, length) {
     var ap = AsciiPack.pack(object);
     assert.equal(ap[0], first);
     assert.equal(ap.length, length);
   };
-  function check_uint (type, from_to) {
-    for (var i = from_to[0]; i < from_to[1]; i++) {
-      var n = Math.pow(2,i);
-      var ap = AsciiPack.pack(n);
-      assert.equal(ap, type + n.toString(16));
-      assert.equal(AsciiPack.unpack(ap), n);
-    }
-  };
-  function check_str(type, to){
-    var strs = new Array(to + 1);
-    var str = strs.join('a');
-    var ap = AsciiPack.pack(str);
-    assert.equal(ap, type + str.length.toString(16) + str);
-    assert.equal(AsciiPack.unpack(ap), str);
-  };
 
-  return function () {
+  return function (ok_callback, finish_callback) {
     for (var it in test_case) {
       try {
-        test_case[it]();
+        var ret = test_case[it]();
+        if (ok_callback) ok_callback(it);
       } catch (ex) {
         console.error(ex.message);
         console.error(ex.stack);
       }
     }
+    if (finish_callback) finish_callback();
   };
 
 })();
