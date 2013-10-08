@@ -7,41 +7,52 @@ AsciiPack is use easy by Web. because all serialize object is only writed ascii 
     JSON is 27 chars:
     {"compact":true,"binary":0}
 
-    AsciiPack is 22 chars:
-    q2m7compactum6binaryf0
-        q2 => map of length 2.
-        m7compact => str of length 7 and value is "compact". and map key.
-        u => true. and map value.
-        m6binary => str of length 6 abd value is "binary". and map key.
-        f0 => int value is 0.
+    AsciiPack is 19 chars:
+    r2NcompactYMschema0
+        r2 => map of length 2.
+        Ncompact => fixbin of length 7 and value is "compact".
+        Y => true.
+        Mbinary => fixbin of length 6 abd value is "binary".
+        0 => fixint value is 0.
 
 ## Formats
 
 ### Overview
 
 <table>
-  <tr><th>format name</th><th>first char</th><th>base decimal</th></tr>
-  <tr><td>int 4</td><td>a</td><td>16</td></tr>
-  <tr><td>int 8</td><td>b</td><td>16</td></tr>
-  <tr><td>int 16</td><td>c</td><td>16</td></tr>
-  <tr><td>int 32</td><td>d</td><td>16</td></tr>
-  <tr><td>int 64</td><td>e</td><td>16</td></tr>
-  <tr><td>uint 4</td><td>f</td><td>16</td></tr>
-  <tr><td>uint 8</td><td>g</td><td>16</td></tr>
-  <tr><td>uint 16</td><td>h</td><td>16</td></tr>
-  <tr><td>uint 32</td><td>i</td><td>16</td></tr>
-  <tr><td>uint 64</td><td>j</td><td>16</td></tr>
-  <tr><td>float 32</td><td>k</td><td>16</td></tr>
-  <tr><td>float 64</td><td>l</td><td>16</td></tr>
-  <tr><td>str 4</td><td>m</td><td>16</td></tr>
-  <tr><td>str 8</td><td>n</td><td>16</td></tr>
-  <tr><td>str 16</td><td>o</td><td>16</td></tr>
-  <tr><td>str 32</td><td>p</td><td>16</td></tr>
-  <tr><td>map</td><td>q</td><td>10</td></tr>
-  <tr><td>array</td><td>r</td><td>10</td></tr>
-  <tr><td>nil</td><td>s</td><td></td></tr>
-  <tr><td>false</td><td>t</td><td></td></tr>
-  <tr><td>true</td><td>u</td><td></td></tr>
+  <tr><th>format name</th><th>first char</th></tr>
+  <tr><td>int 4</td><td>a</td></tr>
+  <tr><td>int 8</td><td>b</td></tr>
+  <tr><td>int 16</td><td>c</td></tr>
+  <tr><td>int 32</td><td>d</td></tr>
+  <tr><td>int 64</td><td>e</td></tr>
+  <tr><td>(blank)</td><td>f</td></tr>
+  <tr><td>uint 8</td><td>g</td></tr>
+  <tr><td>uint 16</td><td>h</td></tr>
+  <tr><td>uint 32</td><td>i</td></tr>
+  <tr><td>uint 64</td><td>j</td></tr>
+  <tr><td>float 32</td><td>k</td></tr>
+  <tr><td>float 64</td><td>l</td></tr>
+  <tr><td>(blank)</td><td>m</td></tr>
+  <tr><td>bin 8</td><td>n</td></tr>
+  <tr><td>bin 16</td><td>o</td></tr>
+  <tr><td>bin 32</td><td>p</td></tr>
+  <tr><td>(blank)</td><td>q</td></tr>
+  <tr><td>map 4</td><td>r</td></tr>
+  <tr><td>map 8</td><td>s</td></tr>
+  <tr><td>map 16</td><td>t</td></tr>
+  <tr><td>map 32</td><td>u</td></tr>
+  <tr><td>array 4</td><td>v</td></tr>
+  <tr><td>array 8</td><td>w</td></tr>
+  <tr><td>array 16</td><td>x</td></tr>
+  <tr><td>array 32</td><td>y</td></tr>
+  <tr><td>(blank)</td><td>z</td></tr>
+  <tr><td>positive fixint</td><td>0-9A-F</td></tr>
+  <tr><td>fixbin</td><td>G-V</td></tr>
+  <tr><td>nil</td><td>W</td></tr>
+  <tr><td>false</td><td>X</td></tr>
+  <tr><td>true</td><td>Y</td></tr>
+  <tr><td>(blank)</td><td>Z</td></tr>
 </table>
 
 ### Notation in diagrams
@@ -67,8 +78,8 @@ AsciiPack is use easy by Web. because all serialize object is only writed ascii 
     int 64:
     e | FFFFFFFFFFFFFFFF
 
-    uint 4:
-    f | F
+    positive fixint:
+    0-9A-F
 
     uint 8:
     g | FF
@@ -91,37 +102,59 @@ Value abide IEEE 754 format.
     float 64:
     l | FFFFFFFFFFFFFFFF
 
-### str
-    str4:
-    m | F | data
+### bin
+    fixbin:
+    G-V | data
 
-    str8:
+    bin 8:
     n | FF | data
 
-    str16:
+    bin 16:
     o | FFFF | data
 
-    str32:
+    bin 32:
     p | FFFFFFFF | data
 
 ### map
-    map:
-    q | D | D * (key + value)
+    map 4:
+    r | F | N * (key + value)
+
+    map 8:
+    s | FF | N * (key + value)
+
+    map 16:
+    t | FFFF | N * (key + value)
+
+    map 32:
+    u | FFFFFFFF | N * (key + value)
+
+    * N is the size of map
 
 ### array
-    array:
-    r | D | D * (value)
+    array 4:
+    v | F | N * value
+
+    array 8:
+    w | FF | N * value
+
+    array 16:
+    x | FFFF | N * value
+
+    array 32:
+    y | FFFFFFFF | N * value
+
+    * N is the size of array
 
 ### nil
     nil:
-    n
+    W
 
 ### boolean
     false:
-    t
+    X
 
     true:
-    u
+    Y
 
 ## Comparison
 

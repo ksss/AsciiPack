@@ -1,27 +1,68 @@
 this.AsciiPack = this.AsciiPack || (function(){
   var AsciiPack = function(){};
   var typemap = {
-    int4:    'a',
-    int8:    'b',
-    int16:   'c',
-    int32:   'd',
-    int64:   'e',
-    uint4:   'f',
-    uint8:   'g',
-    uint16:  'h',
-    uint32:  'i',
-    uint64:  'j',
-    float32: 'k',
-    float64: 'l',
-    str4:    'm',
-    str8:    'n',
-    str16:   'o',
-    str32:   'p',
-    map:     'q',
-    array:   'r',
-    nil:     's',
-    false:   't',
-    true:    'u',
+    int4:              'a',
+    int8:              'b',
+    int16:             'c',
+    int32:             'd',
+    int64:             'e',
+//  (blank):           'f',
+    uint8:             'g',
+    uint16:            'h',
+    uint32:            'i',
+    uint64:            'j',
+    float32:           'k',
+    float64:           'l',
+//  (blank):           'm',
+    bin8:              'n',
+    bin16:             'o',
+    bin32:             'p',
+//  (blank):           'q',
+    map4:              'r',
+    map8:              's',
+    map16:             't',
+    map32:             'u',
+    array4:            'v',
+    array8:            'w',
+    array16:           'x',
+    array32:           'y',
+//  (blank):           'z',
+    positive_fixint_0: '0',
+    positive_fixint_1: '1',
+    positive_fixint_2: '2',
+    positive_fixint_3: '3',
+    positive_fixint_4: '4',
+    positive_fixint_5: '5',
+    positive_fixint_6: '6',
+    positive_fixint_7: '7',
+    positive_fixint_8: '8',
+    positive_fixint_9: '9',
+    positive_fixint_A: 'A',
+    positive_fixint_B: 'B',
+    positive_fixint_C: 'C',
+    positive_fixint_D: 'D',
+    positive_fixint_E: 'E',
+    positive_fixint_F: 'F',
+    fixbin_0:          'G',
+    fixbin_1:          'H',
+    fixbin_2:          'I',
+    fixbin_3:          'J',
+    fixbin_4:          'K',
+    fixbin_5:          'L',
+    fixbin_6:          'M',
+    fixbin_7:          'N',
+    fixbin_8:          'O',
+    fixbin_9:          'P',
+    fixbin_A:          'Q',
+    fixbin_B:          'R',
+    fixbin_C:          'S',
+    fixbin_D:          'T',
+    fixbin_E:          'U',
+    fixbin_F:          'V',
+    nil:               'W',
+    false:             'X',
+    true:              'Y',
+//  (blank):           'Z',
   };
   AsciiPack.typemap = typemap;
   AsciiPack.pack = function(object){
@@ -43,15 +84,16 @@ this.AsciiPack = this.AsciiPack || (function(){
       while(len--) zero += '0';
       return type + zero + hex;
     };
-    var format_str = function(type, length, str){
-      var hex = str.length.toString(16);
+    var format_bin = function(type, length, bin){
+      var hex = bin.length.toString(16);
       var len = length - hex.length;
       var zero = '';
       while (len--) zero += '0';
-      return type + zero + hex + str;
+      return type + zero + hex + bin;
     };
-    var uint4 = function(obj){
-      return format_uint(typemap.uint4, 1, obj);
+    var positive_fixint = function(obj){
+      var t = obj.toString(16).toUpperCase();
+      return typemap['positive_fixint_' + t];
     };
     var uint8 = function(obj){
       return format_uint(typemap.uint8, 2, obj);
@@ -110,29 +152,53 @@ this.AsciiPack = this.AsciiPack || (function(){
     };
     var map = function(obj){
       var keys = [];
+      var f;
       for (var key in obj) if (obj.hasOwnProperty(key)) {
         keys.push(_pack(key) + _pack(obj[key]));
       }
-      return typemap.map + keys.length + keys.join('');
+      if (keys.length < 0x10) {
+        f = [typemap.map4, 1];
+      } else if (keys.length < 0x100) {
+        f = [typemap.map8, 2];
+      } else if (keys.length < 0x10000) {
+        f = [typemap.map16, 4];
+      } else if (keys.length < 0x100000000) {
+        f = [typemap.map32, 8];
+      } else {
+        throw new RangeError("pack size limit over");
+      }
+      return format_uint(f[0], f[1], keys.length) + keys.join('');
     };
     var array = function(obj){
       var keys = [];
       for (var i = 0, len = obj.length; i < len; i++) {
         keys.push(_pack(obj[i]));
       }
-      return typemap.array + keys.length + keys.join('');
+      if (keys.length < 0x10) {
+        f = [typemap.array4, 1];
+      } else if (keys.length < 0x100) {
+        f = [typemap.array8, 2];
+      } else if (keys.length < 0x10000) {
+        f = [typemap.array16, 4];
+      } else if (keys.length < 0x100000000) {
+        f = [typemap.array32, 8];
+      } else {
+        throw new RangeError("pack size limit over");
+      }
+      return format_uint(f[0], f[1], keys.length) + keys.join('');
     };
-    var str4 = function(str){
-      return typemap.str4 + str.length.toString(16) + str;
+    var bin4 = function(bin){
+      var l = bin.length.toString(16);
+      return typemap['fixbin_' + l.toUpperCase()] + bin;
     };
-    var str8 = function(str){
-      return typemap.str8 + str.length.toString(16) + str;
+    var bin8 = function(bin){
+      return typemap.bin8 + bin.length.toString(16) + bin;
     };
-    var str16 = function(str){
-      return format_str(typemap.str16, 4, str);
+    var bin16 = function(bin){
+      return format_bin(typemap.bin16, 4, bin);
     };
-    var str32 = function(str){
-      return format_str(typemap.str32, 8, str);
+    var bin32 = function(bin){
+      return format_bin(typemap.bin32, 8, bin);
     };
     var _pack = function(obj){
       switch ({}.toString.call(obj)) {
@@ -164,7 +230,7 @@ this.AsciiPack = this.AsciiPack || (function(){
         } else if (Math.floor(obj) === obj) {
           if (0 <= obj) {
             if (obj < 0x10) {
-              return uint4(obj);
+              return positive_fixint(obj);
             } else if (obj < 0x100) {
               return uint8(obj);
             } else if (obj < 0x10000) {
@@ -197,13 +263,13 @@ this.AsciiPack = this.AsciiPack || (function(){
 
       case '[object String]':
         if (obj.length < 0x10) {
-          return str4(obj);
+          return bin4(obj);
         } else if (obj.length < 0x100) {
-          return str8(obj);
+          return bin8(obj);
         } else if (obj.length < 0x10000) {
-          return str16(obj);
+          return bin16(obj);
         } else if (obj.length < 0x100000000) {
-          return str32(obj);
+          return bin32(obj);
         } else {
           throw new RangeError("pack size limit over");
         }
@@ -231,17 +297,8 @@ this.AsciiPack = this.AsciiPack || (function(){
       ch = ap[at - 1];
       return ret;
     };
-    var length = function(){
-      var ret = [];
-      while (/\d/.test(ch)) {
-        ret.push(ch);
-        next();
-      }
-      back();
-      return +ret.join('');
-    };
-    var uint4 = function(){
-      return parseInt(next(), 16);
+    var positive_fixint = function(){
+      return parseInt(ch, 16);
     };
     var uint8 = function(){
       return parseInt(cut(2), 16);
@@ -296,62 +353,81 @@ this.AsciiPack = this.AsciiPack || (function(){
         return (sign ? -1 : 1) * (Math.pow(2, exp)) * (frac + 1);
       }
     };
-    var map = function(){
-      next();
-      var hash = {};
-      var len = length();
-      while (len--) {
-        var key = _unpack();
-        hash[key] = _unpack();
-      }
-      return hash;
+    var create_func_map = function(length){
+      return function(){
+        var len = parseInt(cut(length), 16);
+        var map = {};
+        while (len--) {
+          var key = _unpack();
+          map[key] = _unpack();
+        }
+        return map;
+      };
     };
-    var array = function(){
-      next();
-      var array = [];
-      var len = length();
-      while (len--) {
-        array.push(_unpack());
-      }
-      return array;
+    var create_func_array = function(length){
+      return function(){
+        var len = parseInt(cut(length), 16);
+        var array = [];
+        while (len--) {
+          array.push(_unpack());
+        }
+        return array;
+      };
     };
-    var str4 = function () {
-      var len = parseInt(cut(1), 16);
+    var map4  = create_func_map(1);
+    var map8  = create_func_map(2);
+    var map16 = create_func_map(4);
+    var map32 = create_func_map(8);
+    var array4  = create_func_array(1);
+    var array8  = create_func_array(2);
+    var array16 = create_func_array(4);
+    var array32 = create_func_array(8);
+    var fixbin = function () {
+      var len = parseInt(ch.charCodeAt(0) - 71, 16); // 71 = typemap.fixbin_0.charCodeAt(0)
       return cut(len);
     };
-    var str8 = function () {
+    var bin8 = function () {
       var len = parseInt(cut(2), 16);
       return cut(len);
     };
-    var str16 = function () {
+    var bin16 = function () {
       var len = parseInt(cut(4), 16);
       return cut(len);
     };
-    var str32 = function () {
+    var bin32 = function () {
       var len = parseInt(cut(8), 16);
       return cut(len);
     };
 
     var _unpack = function(){
       next();
+      if (/[0-9A-F]/.test(ch)) {
+        return positive_fixint();
+      } else if (/[G-V]/.test(ch)) {
+        return fixbin();
+      }
       switch (ch) {
       case typemap.int4:    return int4();
       case typemap.int8:    return int8();
       case typemap.int16:   return int16();
       case typemap.int32:   return int32();
       case typemap.int64:   return int64();
-      case typemap.uint4:   return uint4();
       case typemap.uint8:   return uint8();
       case typemap.uint16:  return uint16();
       case typemap.uint32:  return uint32();
       case typemap.uint64:  return uint64();
       case typemap.float64: return float64();
-      case typemap.map:     return map();
-      case typemap.array:   return array();
-      case typemap.str4:    return str4();
-      case typemap.str8:    return str8();
-      case typemap.str16:   return str16();
-      case typemap.str32:   return str32();
+      case typemap.bin8:    return bin8();
+      case typemap.bin16:   return bin16();
+      case typemap.bin32:   return bin32();
+      case typemap.map4:    return map4();
+      case typemap.map8:    return map8();
+      case typemap.map16:   return map16();
+      case typemap.map32:   return map32();
+      case typemap.array4:  return array4();
+      case typemap.array8:  return array8();
+      case typemap.array16: return array16();
+      case typemap.array32: return array32();
       case typemap.nil:     return null;
       case typemap.false:   return false;
       case typemap.true:    return true;
