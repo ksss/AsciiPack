@@ -11,5 +11,5 @@ require('./test').run(function(){
   util.print('.');
 }, function(){
   util.print('\n');
-  console.log('^[[32mall test done.^[[m');
+  console.log('all test done.');
 });
