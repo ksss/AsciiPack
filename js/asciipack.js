@@ -277,72 +277,75 @@ this.AsciiPack = this.AsciiPack || (function(){
     };
     return _pack(object);
   };
+
   AsciiPack.unpack = function(ap){
-    var ret;
-    var at = 0;
-    var ch = ap[at];
-    var next = function(){
-      ch = ap[at];
-      at += 1;
-      return ch;
-    };
-    var back = function(){
-      ch = ap[at];
-      at -= 1;
-      return ch;
-    };
-    var cut = function(len){
-      var ret = ap.substr(at, len);
-      at += len;
-      ch = ap[at - 1];
+    var unpacker = new AsciiPack.Unpacker(ap);
+    return unpacker.unpack();
+  };
+  AsciiPack.Unpacker = function(ap){
+    this.ap = ap;
+    this.at = 0;
+    this.ch = ap[0];
+    return this;
+  };
+  AsciiPack.Unpacker.prototype = {
+    next: function(){
+      this.ch = this.ap[this.at];
+      this.at += 1;
+      return this.ch;
+    },
+    cut: function(len){
+      var ret = this.ap.substr(this.at, len);
+      this.at += len;
+      this.ch = this.ap[this.at - 1];
       return ret;
-    };
-    var positive_fixint = function(){
-      return parseInt(ch, 16);
-    };
-    var uint8 = function(){
-      return parseInt(cut(2), 16);
-    };
-    var uint16 = function(){
-      return parseInt(cut(4), 16);
-    };
-    var uint32 = function(){
-      return parseInt(cut(8), 16);
-    };
-    var uint64 = function(){
-      return parseInt(cut(16), 16);
-    };
-    var int4 = function(){
-      next();
-      var i = parseInt(ch, 16);
-      return (ch[0] < 0x8) ? i : i - 0x10;
-    };
-    var int8 = function(){
-      var c = cut(2);
+    },
+    positive_fixint: function(){
+      return parseInt(this.ch, 16);
+    },
+    uint8: function(){
+      return parseInt(this.cut(2), 16);
+    },
+    uint16: function(){
+      return parseInt(this.cut(4), 16);
+    },
+    uint32: function(){
+      return parseInt(this.cut(8), 16);
+    },
+    uint64: function(){
+      return parseInt(this.cut(16), 16);
+    },
+    int4: function(){
+      this.next();
+      var i = parseInt(this.ch, 16);
+      return (this.ch[0] < 0x8) ? i : i - 0x10;
+    },
+    int8: function(){
+      var c = this.cut(2);
       var i = parseInt(c, 16);
       return (c[0] < 0x8) ? i : i - 0x100;
-    };
-    var int16 = function(){
-      var c = cut(4);
+    },
+    int16: function(){
+      var c = this.cut(4);
       var i = parseInt(c, 16);
       return (c[0] < 0x8) ? i : i - 0x10000;
-    };
-    var int32 = function(){
-      var c = cut(8);
+    },
+    int32: function(){
+      var c = this.cut(8);
       var i = parseInt(c, 16);
       return (c[0] < 0x8) ? i : i - 0x100000000;
-    };
-    var int64 = function(){
-      var c = cut(16);
+    },
+    int64: function(){
+      var c = this.cut(16);
       var i = parseInt(c, 16);
       return (c[0] < 0x8) ? i : i - 0x10000000000000000;
-    };
-    var float64 = function(){
-      var hex = cut(3);
+    },
+    float64: function(){
+      var hex = this.cut(3);
       var num = parseInt(hex, 16);
       var sign = num & 0x800;
       var exp = (num & 0x7ff) - 1023;
-      var frac = parseInt(cut(13), 16) * Math.pow(2, -52);
+      var frac = parseInt(this.cut(13), 16) * Math.pow(2, -52);
       if (hex === '7ff' && frac !== 0) {
         return Number.NaN;
       } else if (hex === '7ff' && frac === 0) {
@@ -352,89 +355,98 @@ this.AsciiPack = this.AsciiPack || (function(){
       } else {
         return (sign ? -1 : 1) * (Math.pow(2, exp)) * (frac + 1);
       }
-    };
-    var create_func_map = function(length){
-      return function(){
-        var len = parseInt(cut(length), 16);
-        var map = {};
-        while (len--) {
-          var key = _unpack();
-          map[key] = _unpack();
-        }
-        return map;
-      };
-    };
-    var create_func_array = function(length){
-      return function(){
-        var len = parseInt(cut(length), 16);
-        var array = [];
-        while (len--) {
-          array.push(_unpack());
-        }
-        return array;
-      };
-    };
-    var map4  = create_func_map(1);
-    var map8  = create_func_map(2);
-    var map16 = create_func_map(4);
-    var map32 = create_func_map(8);
-    var array4  = create_func_array(1);
-    var array8  = create_func_array(2);
-    var array16 = create_func_array(4);
-    var array32 = create_func_array(8);
-    var fixbin = function () {
-      var len = parseInt(ch.charCodeAt(0) - 71, 16); // 71 = typemap.fixbin_0.charCodeAt(0)
-      return cut(len);
-    };
-    var bin8 = function () {
-      var len = parseInt(cut(2), 16);
-      return cut(len);
-    };
-    var bin16 = function () {
-      var len = parseInt(cut(4), 16);
-      return cut(len);
-    };
-    var bin32 = function () {
-      var len = parseInt(cut(8), 16);
-      return cut(len);
-    };
-
-    var _unpack = function(){
-      next();
-      if (/[0-9A-F]/.test(ch)) {
-        return positive_fixint();
-      } else if (/[G-V]/.test(ch)) {
-        return fixbin();
+    },
+    map: function(length){
+      var len = parseInt(this.cut(length), 16);
+      var _map = {};
+      while (len--) {
+        _map[this.unpack()] = this.unpack();
       }
-      switch (ch) {
-      case typemap.int4:    return int4();
-      case typemap.int8:    return int8();
-      case typemap.int16:   return int16();
-      case typemap.int32:   return int32();
-      case typemap.int64:   return int64();
-      case typemap.uint8:   return uint8();
-      case typemap.uint16:  return uint16();
-      case typemap.uint32:  return uint32();
-      case typemap.uint64:  return uint64();
-      case typemap.float64: return float64();
-      case typemap.bin8:    return bin8();
-      case typemap.bin16:   return bin16();
-      case typemap.bin32:   return bin32();
-      case typemap.map4:    return map4();
-      case typemap.map8:    return map8();
-      case typemap.map16:   return map16();
-      case typemap.map32:   return map32();
-      case typemap.array4:  return array4();
-      case typemap.array8:  return array8();
-      case typemap.array16: return array16();
-      case typemap.array32: return array32();
+      return _map;
+    },
+    array: function(length){
+      var len = parseInt(this.cut(length), 16);
+      var _array = [];
+      while (len--) {
+        _array.push(this.unpack());
+      }
+      return _array;
+    },
+    map4: function(){ return this.map(1); },
+    map8: function(){ return this.map(2); },
+    map16: function(){ return this.map(4); },
+    map32: function(){ return this.map(8); },
+    array4: function(){ return this.array(1); },
+    array8: function(){ return this.array(2); },
+    array16: function(){ return this.array(4); },
+    array32: function(){ return this.array(8); },
+    fixbin: function () {
+      var len = parseInt(this.ch.charCodeAt(0) - 71, 16); // 71 = typemap.fixbin_0.charCodeAt(0)
+      return this.cut(len);
+    },
+    bin8: function () {
+      var len = parseInt(this.cut(2), 16);
+      return this.cut(len);
+    },
+    bin16: function () {
+      var len = parseInt(this.cut(4), 16);
+      return this.cut(len);
+    },
+    bin32: function () {
+      var len = parseInt(this.cut(8), 16);
+      return this.cut(len);
+    },
+
+    unpack: function(){
+      this.next();
+      switch (this.ch) {
+      case typemap.int4:    return this.int4();
+      case typemap.int8:    return this.int8();
+      case typemap.int16:   return this.int16();
+      case typemap.int32:   return this.int32();
+      case typemap.int64:   return this.int64();
+      case typemap.uint8:   return this.uint8();
+      case typemap.uint16:  return this.uint16();
+      case typemap.uint32:  return this.uint32();
+      case typemap.uint64:  return this.uint64();
+      case typemap.float64: return this.float64();
+      case typemap.bin8:    return this.bin8();
+      case typemap.bin16:   return this.bin16();
+      case typemap.bin32:   return this.bin32();
+      case typemap.map4:    return this.map4();
+      case typemap.map8:    return this.map8();
+      case typemap.map16:   return this.map16();
+      case typemap.map32:   return this.map32();
+      case typemap.array4:  return this.array4();
+      case typemap.array8:  return this.array8();
+      case typemap.array16: return this.array16();
+      case typemap.array32: return this.array32();
       case typemap.nil:     return null;
       case typemap.false:   return false;
       case typemap.true:    return true;
-      default:              throw new Error("undefined type " + ch + ',ap:' + ap + ',at:' + at);
+      case typemap.positive_fixint_0: return 0;
+      case typemap.positive_fixint_1: return 1;
+      case typemap.positive_fixint_2: return 2;
+      case typemap.positive_fixint_3: return 3;
+      case typemap.positive_fixint_4: return 4;
+      case typemap.positive_fixint_5: return 5;
+      case typemap.positive_fixint_6: return 6;
+      case typemap.positive_fixint_7: return 7;
+      case typemap.positive_fixint_8: return 8;
+      case typemap.positive_fixint_9: return 9;
+      case typemap.positive_fixint_A: return 10;
+      case typemap.positive_fixint_B: return 11;
+      case typemap.positive_fixint_C: return 12;
+      case typemap.positive_fixint_D: return 13;
+      case typemap.positive_fixint_E: return 14;
+      case typemap.positive_fixint_F: return 15;
+      default:
+        if (/[G-V]/.test(this.ch)) {
+          return this.fixbin();
+        }
+        throw new Error("undefined type " + this.ch + ',ap:' + this.ap + ',at:' + this.at);
       }
-    };
-    return _unpack();
+    }
   };
   return AsciiPack;
 })();
