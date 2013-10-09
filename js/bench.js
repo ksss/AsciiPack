@@ -2,7 +2,7 @@
 
 var AsciiPack = require('./asciipack').AsciiPack;
 
-function json_stringpack(name, obj){
+function json_asciipack(name, obj){
   var lens = {}, ap, json;
 
   console.log('[' + name + ']');
@@ -47,5 +47,5 @@ var cases = {
 };
 
 for (var key in cases) {
-  json_stringpack(key, cases[key]);
+  json_asciipack(key, cases[key]);
 }
