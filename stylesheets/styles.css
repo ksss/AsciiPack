@@ -139,9 +139,11 @@ html {
 html,
 button,
 input,
-select,
-textarea {
+select {
   font-family: sans-serif;
+}
+textarea {
+  font-family: "Lucida Sans", Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
 }
 
 /*

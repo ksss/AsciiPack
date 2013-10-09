@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script src="javascripts/respond.js"></script>
+    <script src="javascripts/asciipack-0.1.0.js"></script>
+    <script src="javascripts/demo.js"></script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -44,6 +46,33 @@
 <p>AsciiPack is an object serialization inspired by MessagePack.</p>
 
 <p>AsciiPack is use easy by Web. because all serialize object is only writed ascii strings.</p>
+
+<h2>
+<a name="demo" class="anchor" href="#demo"><span class="octicon octicon-link"></span></a>Demo</h2>
+
+<table>
+<tr>
+<th>
+  <h3>
+  <a name="JSON" class="anchor" href="#JSON"><span class="octicon octicon-link"></span></a>JSON</h3>
+</th>
+<th>
+  <h3>
+  <a name="AsciiPack" class="anchor" href="#AsciiPack"><span class="octicon octicon-link"></span></a>AsciiPack</h3>
+</th>
+</tr>
+<tr>
+<td>
+  <textarea id="demo-json" name="" rows="10" cols="35">{"compact":true,"binay":0}</textarea>
+</td>
+<td>
+  <textarea id="demo-asciipack" name="" rows="10" cols="35">r2NcompactYMbinary0</textarea>
+</td>
+</tr>
+</table>
+
+
+
 
 <pre><code>JSON is 27 chars:
 {"compact":true,"binary":0}
