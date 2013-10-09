@@ -73,7 +73,7 @@ this.run = (function(){
       }
       var nan = AsciiPack.pack(Number.NaN);
       assert.equal(nan, t.float64 + '7fffffffffffffff');
-      assert.equal(Number.isNaN(AsciiPack.unpack(nan)), true);
+      assert.equal(isNaN(AsciiPack.unpack(nan)), true);
     },
     "map4": function(){
       format_map(0, t.map4, 2);
