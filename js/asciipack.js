@@ -66,7 +66,14 @@ this.AsciiPack = this.AsciiPack || (function(){
   };
   AsciiPack.typemap = typemap;
   AsciiPack.pack = function(object){
-    var toString16 = function(a){
+    var packer = new AsciiPack.Packer();
+    return packer.pack(object);
+  };
+  AsciiPack.Packer = function(obj){
+    this.obj = obj;
+  };
+  AsciiPack.Packer.prototype = {
+    toString16: function(a){
       return a.map(function(i){
         var hex = i.toString(16);
         var len = hex.length;
@@ -76,65 +83,65 @@ this.AsciiPack = this.AsciiPack || (function(){
         }
         return hex;
       }).join('');
-    };
-    var format_uint = function(type, length, num){
+    },
+    format_uint: function(type, length, num){
       var hex = num.toString(16);
       var len = length - hex.length;
       var zero = '';
       while(len--) zero += '0';
       return type + zero + hex;
-    };
-    var format_bin = function(type, length, bin){
+    },
+    format_bin: function(type, length, bin){
       var hex = bin.length.toString(16);
       var len = length - hex.length;
       var zero = '';
       while (len--) zero += '0';
       return type + zero + hex + bin;
-    };
-    var positive_fixint = function(obj){
+    },
+    positive_fixint: function(obj){
       var t = obj.toString(16).toUpperCase();
       return typemap['positive_fixint_' + t];
-    };
-    var uint8 = function(obj){
-      return format_uint(typemap.uint8, 2, obj);
-    };
-    var uint16 = function(obj){
-      return format_uint(typemap.uint16, 4, obj);
-    };
-    var uint32 = function(obj){
-      return format_uint(typemap.uint32, 8, obj);
-    };
-    var uint64 = function(obj){
-      return format_uint(typemap.uint64, 16, obj);
-    };
-    var int4 = function(obj){
+    },
+    uint8: function(obj){
+      return this.format_uint(typemap.uint8, 2, obj);
+    },
+    uint16: function(obj){
+      return this.format_uint(typemap.uint16, 4, obj);
+    },
+    uint32: function(obj){
+      return this.format_uint(typemap.uint32, 8, obj);
+    },
+    uint64: function(obj){
+      return this.format_uint(typemap.uint64, 16, obj);
+    },
+    int4: function(obj){
       return typemap.int4 + ((obj & 0xf).toString(16));
-    };
-    var int8 = function(obj){
+    },
+    int8: function(obj){
       return typemap.int8 + ((obj & 0xff).toString(16));
-    };
-    var int16 = function(obj){
-      return typemap.int16 + toString16([
+    },
+    int16: function(obj){
+      return typemap.int16 + this.toString16([
         (obj >> 8) & 0xff, (obj) & 0xff
       ]);
-    };
-    var int32 = function(obj){
-      return typemap.int32 + toString16([
+    },
+    int32: function(obj){
+      return typemap.int32 + this.toString16([
         (obj >> 24) & 0xff, (obj >> 16) & 0xff,
         (obj >> 8)  & 0xff, (obj)       & 0xff
       ]);
-    };
-    var int64 = function(obj){
+    },
+    int64: function(obj){
       var high = Math.floor(obj * Math.pow(2, -256));
       var low = obj & 0xffffffff;
-      return typemap.int64 + toString16([
+      return typemap.int64 + this.toString16([
         (high >> 24) & 0xff, (high >> 16) & 0xff,
         (high >> 8)  & 0xff, (high)       & 0xff,
         (low >> 24)  & 0xff, (low >> 16)  & 0xff,
         (low >> 8)   & 0xff, (low)        & 0xff
       ]);
-    };
-    var float64 = function(obj){
+    },
+    float64: function(obj){
       var sign = obj < 0;
       if (sign) obj *= -1;
       var exp = ((Math.log(obj) / Math.LN2) + 1023) | 0;
@@ -143,18 +150,18 @@ this.AsciiPack = this.AsciiPack || (function(){
       if (sign) exp |= 0x800;
       var high = ((frac / 0x100000000) & 0xfffff) | (exp << 20);
 
-      return typemap.float64 + toString16([
+      return typemap.float64 + this.toString16([
         (high >> 24) & 0xff, (high >> 16) & 0xff,
         (high >>  8) & 0xff, (high)       & 0xff,
         (low  >> 24) & 0xff, (low  >> 16) & 0xff,
         (low  >>  8) & 0xff, (low)        & 0xff
       ]);
-    };
-    var map = function(obj){
+    },
+    map: function(obj){
       var keys = [];
       var f;
       for (var key in obj) if (obj.hasOwnProperty(key)) {
-        keys.push(_pack(key) + _pack(obj[key]));
+        keys.push(this.pack(key) + this.pack(obj[key]));
       }
       if (keys.length < 0x10) {
         f = [typemap.map4, 1];
@@ -167,12 +174,12 @@ this.AsciiPack = this.AsciiPack || (function(){
       } else {
         throw new RangeError("pack size limit over");
       }
-      return format_uint(f[0], f[1], keys.length) + keys.join('');
-    };
-    var array = function(obj){
+      return this.format_uint(f[0], f[1], keys.length) + keys.join('');
+    },
+    array: function(obj){
       var keys = [];
       for (var i = 0, len = obj.length; i < len; i++) {
-        keys.push(_pack(obj[i]));
+        keys.push(this.pack(obj[i]));
       }
       if (keys.length < 0x10) {
         f = [typemap.array4, 1];
@@ -185,29 +192,29 @@ this.AsciiPack = this.AsciiPack || (function(){
       } else {
         throw new RangeError("pack size limit over");
       }
-      return format_uint(f[0], f[1], keys.length) + keys.join('');
-    };
-    var bin4 = function(bin){
+      return this.format_uint(f[0], f[1], keys.length) + keys.join('');
+    },
+    fixbin: function(bin){
       var l = bin.length.toString(16);
       return typemap['fixbin_' + l.toUpperCase()] + bin;
-    };
-    var bin8 = function(bin){
+    },
+    bin8: function(bin){
       return typemap.bin8 + bin.length.toString(16) + bin;
-    };
-    var bin16 = function(bin){
-      return format_bin(typemap.bin16, 4, bin);
-    };
-    var bin32 = function(bin){
-      return format_bin(typemap.bin32, 8, bin);
-    };
-    var _pack = function(obj){
+    },
+    bin16: function(bin){
+      return this.format_bin(typemap.bin16, 4, bin);
+    },
+    bin32: function(bin){
+      return this.format_bin(typemap.bin32, 8, bin);
+    },
+    pack: function(obj){
       switch ({}.toString.call(obj)) {
 
       case '[object Object]':
-        return map(obj);
+        return this.map(obj);
 
       case '[object Array]':
-        return array(obj);
+        return this.array(obj);
 
       case '[object Null]':
       case '[object Undefined]':
@@ -230,52 +237,51 @@ this.AsciiPack = this.AsciiPack || (function(){
         } else if (Math.floor(obj) === obj) {
           if (0 <= obj) {
             if (obj < 0x10) {
-              return positive_fixint(obj);
+              return this.positive_fixint(obj);
             } else if (obj < 0x100) {
-              return uint8(obj);
+              return this.uint8(obj);
             } else if (obj < 0x10000) {
-              return uint16(obj);
+              return this.uint16(obj);
             } else if (obj < 0x100000000) {
-              return uint32(obj);
+              return this.uint32(obj);
             } else if (obj < 0x10000000000000000) {
-              return uint64(obj);
+              return this.uint64(obj);
             } else {
               throw new RangeError("pack size limit over");
             }
           } else {
             if (-0x8 <= obj) {
-              return int4(obj);
+              return this.int4(obj);
             } else if (-0x80 <= obj) {
-              return int8(obj);
+              return this.int8(obj);
             } else if (-0x8000 <= obj) {
-              return int16(obj);
+              return this.int16(obj);
             } else if (-0x80000000 <= obj) {
-              return int32(obj);
+              return this.int32(obj);
             } else if (-0x8000000000000000 <= obj){
-              return int64(obj);
+              return this.int64(obj);
             } else {
               throw new RangeError("pack size limit over");
             }
           }
         } else {
-          return float64(obj);
+          return this.float64(obj);
         }
 
       case '[object String]':
         if (obj.length < 0x10) {
-          return bin4(obj);
+          return this.fixbin(obj);
         } else if (obj.length < 0x100) {
-          return bin8(obj);
+          return this.bin8(obj);
         } else if (obj.length < 0x10000) {
-          return bin16(obj);
+          return this.bin16(obj);
         } else if (obj.length < 0x100000000) {
-          return bin32(obj);
+          return this.bin32(obj);
         } else {
           throw new RangeError("pack size limit over");
         }
       };
-    };
-    return _pack(object);
+    }
   };
 
   AsciiPack.unpack = function(ap){
