@@ -76,35 +76,35 @@ this.run = (function(){
       assert.equal(isNaN(AsciiPack.unpack(nan)), true);
     },
     "map4": function(){
-      format_map(0, t.map4, 2);
-      format_map(0xf, t.map4, 2);
+      format_map(0, t.map4);
+      format_map(0xf, t.map4);
     },
     "map8": function(){
-      format_map(0x10, t.map8, 3);
-      format_map(0xff, t.map8, 3);
+      format_map(0x10, t.map8);
+      format_map(0xff, t.map8);
     },
     "map16": function(){
-      format_map(0x100, t.map16, 5);
-      format_map(0xffff, t.map16, 5);
+      format_map(0x100, t.map16);
+      format_map(0xffff, t.map16);
     },
     "map32": function(){
-      format_map(0x10000, t.map32, 9);
+      format_map(0x10000, t.map32);
       // FIXME FATAL ERROR: CALL_AND_RETRY_0 Allocation failed - process out of memory
       // format_map(0xffffffff, t.map32, 9);
     },
     "array4": function(){
-      format_array(0, t.array4, 2);
+      format_array(0, t.array4);
     },
     "array8": function(){
-      format_array(0x10, t.array8, 3);
-      format_array(0xff, t.array8, 3);
+      format_array(0x10, t.array8);
+      format_array(0xff, t.array8);
     },
     "array16": function(){
-      format_array(0x100, t.array16, 5);
-      format_array(0xffff, t.array16, 5);
+      format_array(0x100, t.array16);
+      format_array(0xffff, t.array16);
     },
     "array32": function(){
-      format_array(0x10000, t.array32, 9);
+      format_array(0x10000, t.array32);
       // FIXME FATAL ERROR: CALL_AND_RETRY_0 Allocation failed - process out of memory
       // format_array(0xffffffff, t.array32, 9);
     },
@@ -144,7 +144,7 @@ this.run = (function(){
     assert.equal(ap.length, length);
     assert.equal(AsciiPack.unpack(ap), object);
   };
-  function format_map (count, first, length) {
+  function format_map (count, first) {
     var map = {};
     for (var i = 0; i < count; i++) {
       map[i] = 0;
@@ -153,7 +153,7 @@ this.run = (function(){
     assert.equal(ap[0], first);
     assert.deepEqual(AsciiPack.unpack(ap), map);
   };
-  function format_array (count, first, length) {
+  function format_array (count, first) {
     var array = [];
     for (var i = 0; i < count; i++) {
       array[i] = 0;

@@ -33,7 +33,7 @@ end
 
 def bench(name)
   t = Time.now
-  1000.times {
+  100000.times {
     yield
   }
   p name + ': ' + (Time.now - t).to_s + 'ms'
