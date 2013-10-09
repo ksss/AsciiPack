@@ -1,0 +1,359 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>AsciiPack by ksss</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/ksss/AsciiPack">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/ksss/AsciiPack/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/ksss/AsciiPack/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>AsciiPack</h1>
+          <p>AsciiPack is an object serialization inspired by MessagePack.</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/ksss">ksss</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a name="asciipack" class="anchor" href="#asciipack"><span class="octicon octicon-link"></span></a>AsciiPack</h1>
+
+<p>AsciiPack is an object serialization inspired by MessagePack.</p>
+
+<p>AsciiPack is use easy by Web. because all serialize object is only writed ascii strings.</p>
+
+<pre><code>JSON is 27 chars:
+{"compact":true,"binary":0}
+
+AsciiPack is 19 chars:
+r2NcompactYMschema0
+    r2 =&gt; map of length 2.
+    Ncompact =&gt; fixbin of length 7 and value is "compact".
+    Y =&gt; true.
+    Mbinary =&gt; fixbin of length 6 abd value is "binary".
+    0 =&gt; fixint value is 0.
+</code></pre>
+
+<h2>
+<a name="formats" class="anchor" href="#formats"><span class="octicon octicon-link"></span></a>Formats</h2>
+
+<h3>
+<a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h3>
+
+<table>
+<tr>
+<th>format name</th>
+<th>first char</th>
+</tr>
+<tr>
+<td>int 4</td>
+<td>a</td>
+</tr>
+<tr>
+<td>int 8</td>
+<td>b</td>
+</tr>
+<tr>
+<td>int 16</td>
+<td>c</td>
+</tr>
+<tr>
+<td>int 32</td>
+<td>d</td>
+</tr>
+<tr>
+<td>int 64</td>
+<td>e</td>
+</tr>
+<tr>
+<td>(blank)</td>
+<td>f</td>
+</tr>
+<tr>
+<td>uint 8</td>
+<td>g</td>
+</tr>
+<tr>
+<td>uint 16</td>
+<td>h</td>
+</tr>
+<tr>
+<td>uint 32</td>
+<td>i</td>
+</tr>
+<tr>
+<td>uint 64</td>
+<td>j</td>
+</tr>
+<tr>
+<td>float 32</td>
+<td>k</td>
+</tr>
+<tr>
+<td>float 64</td>
+<td>l</td>
+</tr>
+<tr>
+<td>(blank)</td>
+<td>m</td>
+</tr>
+<tr>
+<td>bin 8</td>
+<td>n</td>
+</tr>
+<tr>
+<td>bin 16</td>
+<td>o</td>
+</tr>
+<tr>
+<td>bin 32</td>
+<td>p</td>
+</tr>
+<tr>
+<td>(blank)</td>
+<td>q</td>
+</tr>
+<tr>
+<td>map 4</td>
+<td>r</td>
+</tr>
+<tr>
+<td>map 8</td>
+<td>s</td>
+</tr>
+<tr>
+<td>map 16</td>
+<td>t</td>
+</tr>
+<tr>
+<td>map 32</td>
+<td>u</td>
+</tr>
+<tr>
+<td>array 4</td>
+<td>v</td>
+</tr>
+<tr>
+<td>array 8</td>
+<td>w</td>
+</tr>
+<tr>
+<td>array 16</td>
+<td>x</td>
+</tr>
+<tr>
+<td>array 32</td>
+<td>y</td>
+</tr>
+<tr>
+<td>(blank)</td>
+<td>z</td>
+</tr>
+<tr>
+<td>positive fixint</td>
+<td>0-9A-F</td>
+</tr>
+<tr>
+<td>fixbin</td>
+<td>G-V</td>
+</tr>
+<tr>
+<td>nil</td>
+<td>W</td>
+</tr>
+<tr>
+<td>false</td>
+<td>X</td>
+</tr>
+<tr>
+<td>true</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>(blank)</td>
+<td>Z</td>
+</tr>
+</table><h3>
+<a name="notation-in-diagrams" class="anchor" href="#notation-in-diagrams"><span class="octicon octicon-link"></span></a>Notation in diagrams</h3>
+
+<pre><code>All object serialize format.
+key | [length] | [variable]
+
+`F` is Hexadecimal number by one char.
+`D` is Decimal number.
+</code></pre>
+
+<h3>
+<a name="int" class="anchor" href="#int"><span class="octicon octicon-link"></span></a>int</h3>
+
+<pre><code>int 4:
+a | F
+
+int 8:
+b | FF
+
+int 16:
+c | FFFF
+
+int 32:
+d | FFFFFFFF
+
+int 64:
+e | FFFFFFFFFFFFFFFF
+
+positive fixint:
+0-9A-F
+
+uint 8:
+g | FF
+
+uint 16:
+h | FFFF
+
+uint 32:
+i | FFFFFFFF
+
+uint 64:
+j | FFFFFFFFFFFFFFFF
+</code></pre>
+
+<h3>
+<a name="float" class="anchor" href="#float"><span class="octicon octicon-link"></span></a>float</h3>
+
+<p>Value abide IEEE 754 format.</p>
+
+<pre><code>float 32:
+k | FFFFFFFF
+
+float 64:
+l | FFFFFFFFFFFFFFFF
+</code></pre>
+
+<h3>
+<a name="bin" class="anchor" href="#bin"><span class="octicon octicon-link"></span></a>bin</h3>
+
+<pre><code>fixbin:
+G-V | data
+
+bin 8:
+n | FF | data
+
+bin 16:
+o | FFFF | data
+
+bin 32:
+p | FFFFFFFF | data
+</code></pre>
+
+<h3>
+<a name="map" class="anchor" href="#map"><span class="octicon octicon-link"></span></a>map</h3>
+
+<pre><code>map 4:
+r | F | N * (key + value)
+
+map 8:
+s | FF | N * (key + value)
+
+map 16:
+t | FFFF | N * (key + value)
+
+map 32:
+u | FFFFFFFF | N * (key + value)
+
+* N is the size of map
+</code></pre>
+
+<h3>
+<a name="array" class="anchor" href="#array"><span class="octicon octicon-link"></span></a>array</h3>
+
+<pre><code>array 4:
+v | F | N * value
+
+array 8:
+w | FF | N * value
+
+array 16:
+x | FFFF | N * value
+
+array 32:
+y | FFFFFFFF | N * value
+
+* N is the size of array
+</code></pre>
+
+<h3>
+<a name="nil" class="anchor" href="#nil"><span class="octicon octicon-link"></span></a>nil</h3>
+
+<pre><code>nil:
+W
+</code></pre>
+
+<h3>
+<a name="boolean" class="anchor" href="#boolean"><span class="octicon octicon-link"></span></a>boolean</h3>
+
+<pre><code>false:
+X
+
+true:
+Y
+</code></pre>
+
+<h2>
+<a name="comparison" class="anchor" href="#comparison"><span class="octicon octicon-link"></span></a>Comparison</h2>
+
+<table>
+<tr>
+<th>Serializer</th>
+<th>Length</th>
+<th>Speed</th>
+<th>Readability</th>
+</tr>
+<tr>
+<td>JSON</td>
+<td>×</td>
+<td>△</td>
+<td>○</td>
+</tr>
+<tr>
+<td>MessagePack</td>
+<td>○</td>
+<td>○</td>
+<td>×</td>
+</tr>
+<tr>
+<td>AsciiPack</td>
+<td>△</td>
+<td>×</td>
+<td>△</td>
+</tr>
+</table>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
