@@ -12,23 +12,29 @@ module AsciiPack
     def unpack
       move
       case @ch
+      when /[0-9A-F]/; positive_fixint
+      when /[G-V]/; fixbin
       when TypeMap.int4; int4
       when TypeMap.int8; int8
       when TypeMap.int16; int16
       when TypeMap.int32; int32
       when TypeMap.int64; int64
-      when TypeMap.uint4; uint4
       when TypeMap.uint8; uint8
       when TypeMap.uint16; uint16
       when TypeMap.uint32; uint32
       when TypeMap.uint64; uint64
       when TypeMap.float64; float64
-      when TypeMap.map; map
-      when TypeMap.array; array
-      when TypeMap.str4; str4
-      when TypeMap.str8; str8
-      when TypeMap.str16; str16
-      when TypeMap.str32; str32
+      when TypeMap.map4; map4
+      when TypeMap.map8; map8
+      when TypeMap.map16; map16
+      when TypeMap.map32; map32
+      when TypeMap.array4; array4
+      when TypeMap.array8; array8
+      when TypeMap.array16; array16
+      when TypeMap.array32; array32
+      when TypeMap.bin8; bin8
+      when TypeMap.bin16; bin16
+      when TypeMap.bin32; bin32
       when TypeMap.nil; nil
       when TypeMap.false; false
       when TypeMap.true; true
@@ -44,27 +50,11 @@ private
       @ch
     end
 
-    def back
-      @ch = @ap[@at]
-      @at -= 1
-      @ch
-    end
-
     def cut (len)
       @ret = @ap[@at...(@at + len)]
       @at += len
       @ch = @ap[@at]
       @ret
-    end
-
-    def length
-      ret = []
-      while /\d/ =~ @ch
-        ret << @ch
-        move
-      end
-      back
-      ret.join('').to_i
     end
 
     def int4
@@ -97,8 +87,8 @@ private
       (c[0].to_i(16) < 0x8) ? i : i - 0x10000000000000000;
     end
 
-    def uint4
-      move.to_i(16)
+    def positive_fixint
+      @ch.to_i(16)
     end
 
     def uint8
@@ -136,41 +126,51 @@ private
       ((sign == 0 ? 1 : -1) * frac * (2**(exp - 52))).to_f
     end
 
-    def map
-      move
+    def map (length)
+      len = cut(length).to_i(16)
       hash = {}
-      length.times {
+      len.times {
         key = unpack
         hash[key] = unpack
       }
       hash
     end
 
-    def array
-      move
+    def map4; map(1) end
+    def map8; map(2) end
+    def map16; map(4) end
+    def map32; map(8) end
+
+    def array (length)
+      len = cut(length).to_i(16)
       array = []
-      length.times {
+      len.times {
         array << unpack
       }
       array
     end
 
-    def str4
-      len = cut(1).to_i(16)
+    def array4; array(1) end
+    def array8; array(2) end
+    def array16; array(4) end
+    def array32; array(8) end
+
+    def fixbin
+      len = @ch.ord - 71 # 71 = TypeMap.fixbin_0.ord
       cut(len)
     end
 
-    def str8
+    def bin8
       len = cut(2).to_i(16)
       cut(len)
     end
 
-    def str16
+    def bin16
       len = cut(4).to_i(16)
       cut(len)
     end
 
-    def str32
+    def bin32
       len = cut(8).to_i(16)
       cut(len)
     end

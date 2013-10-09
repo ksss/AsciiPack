@@ -194,8 +194,7 @@ this.AsciiPack = this.AsciiPack || (function(){
       return this.format_uint(f[0], f[1], keys.length) + keys.join('');
     },
     fixbin: function(bin){
-      var l = bin.length.toString(16);
-      return typemap['fixbin_' + l.toUpperCase()] + bin;
+      return String.fromCharCode(bin.length + 71) + bin;
     },
     bin8: function(bin){
       return typemap.bin8 + bin.length.toString(16) + bin;

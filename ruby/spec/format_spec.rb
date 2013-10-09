@@ -3,6 +3,9 @@
 require 'spec_helper'
 
 describe AsciiPack do
+  it "intro" do
+    expect(AsciiPack.pack({"compact"=>true,"binary"=>0})).to eq('r2NcompactYMbinary0')
+  end
   it "int 4" do
     format -1, T.int4, 2
     format -8, T.int4, 2
@@ -28,9 +31,11 @@ describe AsciiPack do
     format -0x8000000000000000, T.int64, 17
   end
 
-  it "uint 4" do
-    format 0x0, T.uint4, 2
-    format 0xf, T.uint4, 2
+  it "positive fixint" do
+    format 0x0, T.positive_fixint_0, 1
+    format 0x1, T.positive_fixint_1, 1
+    format 0xe, T.positive_fixint_E, 1
+    format 0xf, T.positive_fixint_F, 1
   end
 
   it "uint 8" do
@@ -68,37 +73,69 @@ describe AsciiPack do
     expect(AsciiPack.pack(-1 / 0.0)).to eq(T.float64 + 'fff0000000000000')
   end
 
-  it "str 4" do
-    format "", T.str4, 2
-    format " " * 0xf, T.str4, 17
+  it "fixbin" do
+    format "", T.fixbin_0, 1
+    format " ", T.fixbin_1, 2
+    format " " * 0xe, T.fixbin_E, 15
+    format " " * 0xf, T.fixbin_F, 16
   end
 
-  it "str 8" do
-    format "a" * 0x10, T.str8, 3 + 0x10
-    format "a" * 0xff, T.str8, 3 + 0xff
+  it "bin 8" do
+    format "a" * 0x10, T.bin8, 3 + 0x10
+    format "a" * 0xff, T.bin8, 3 + 0xff
   end
 
-  it "str 16" do
-    format "a" * 0x100, T.str16, 5 + 0x100
-    format "a" * 0xffff, T.str16, 5 + 0xffff
+  it "bin 16" do
+    format "a" * 0x100, T.bin16, 5 + 0x100
+    format "a" * 0xffff, T.bin16, 5 + 0xffff
   end
 
-  it "str 32" do
-    format "a" * 0x10000, T.str32, 9 + 0x10000
-    # too late
-    # format "a" * 0xffffffff, T.str32, 9 + 0xffffffff
+  it "bin 32" do
+    format "a" * 0x10000, T.bin32, 9 + 0x10000
+    # FIXME too late
+    # format "a" * 0xffffffff, T.bin32, 9 + 0xffffffff
   end
 
-  it "map" do
-    format({}, T.map, 2)
-    format({"hash" => {}}, T.map, 10)
-    expect(AsciiPack.pack({})).to eq('q0')
+  it "map 4" do
+    format_map 0, T.map4
+    format_map 0xf, T.map4
   end
 
-  it "array" do
-    format([], T.array, 2)
-    format([1,2,3], T.array, 8)
-    expect(AsciiPack.pack([])).to eq('r0')
+  it "map 8" do
+    format_map 0x10, T.map8
+    format_map 0xff, T.map8
+  end
+
+  it "map 16" do
+    format_map 0x100, T.map16
+    format_map 0xffff, T.map16
+  end
+
+  it "map 32" do
+    format_map 0x10000, T.map32
+    # FIXME too late
+    # format_map 0xffffffff, T.map32
+  end
+
+  it "array 4" do
+    format_array 0, T.array4
+    format_array 0xf, T.array4
+  end
+
+  it "array 8" do
+    format_array 0x10, T.array8
+    format_array 0xff, T.array8
+  end
+
+  it "array 16" do
+    format_array 0x100, T.array16
+    format_array 0xffff, T.array16
+  end
+
+  it "array 32" do
+    format_array 0x10000, T.array32
+    # FIXME too late
+    # format_array 0xffffffff, T.array32
   end
 
   it "nil" do
@@ -119,4 +156,20 @@ def format (object, first, length)
   expect(ap[0]).to eq(first)
   expect(ap.length).to eq(length)
   expect(AsciiPack.unpack(ap)).to eq(object)
+end
+
+def format_map (count, first)
+  map = {}
+  count.times{ |i| map[i] = 0 }
+  ap = AsciiPack.pack(map)
+  expect(ap[0]).to eq(first)
+  expect(AsciiPack.unpack(ap)).to eq(map)
+end
+
+def format_array (count, first)
+  array = []
+  count.times{ |i| array[i] = 0 }
+  ap = AsciiPack.pack(array)
+  expect(ap[0]).to eq(first)
+  expect(AsciiPack.unpack(ap)).to eq(array)
 end

@@ -13,7 +13,7 @@ module AsciiPack
           if obj.kind_of?(Integer)
             if 0 <= obj
               if obj < 0x10
-                uint4 obj
+                positive_fixint obj
               elsif obj < 0x100
                 uint8 obj
               elsif obj < 0x10000
@@ -44,13 +44,13 @@ module AsciiPack
         when obj.kind_of?(String)
           case obj.length
           when 0...0x10
-            str4 obj
+            fixbin obj
           when 0x10...0x100
-            str8 obj
+            bin8 obj
           when 0x100...0x10000
-            str16 obj
+            bin16 obj
           when 0x10000...0x100000000
-            str32 obj
+            bin32 obj
           else
             raise "pack size limit over"
           end
@@ -89,8 +89,8 @@ module AsciiPack
         TypeMap.int64 + ((obj & 0xffffffffffffffff).to_s(16))
       end
 
-      def uint4 (obj)
-        format_uint(TypeMap.uint4, 1, obj)
+      def positive_fixint (obj)
+        obj.to_s(16).upcase
       end
 
       def uint8 (obj)
@@ -134,28 +134,39 @@ module AsciiPack
         ])
       end
 
-      def str4 (obj)
-        format_str TypeMap.str4, 1, obj
+      def fixbin (obj)
+        (obj.length + 71).chr + obj
       end
 
-      def str8 (obj)
-        format_str TypeMap.str8, 2, obj
+      def bin8 (obj)
+        format_bin TypeMap.bin8, 2, obj
       end
 
-      def str16 (obj)
-        format_str TypeMap.str16, 4, obj
+      def bin16 (obj)
+        format_bin TypeMap.bin16, 4, obj
       end
 
-      def str32 (obj)
-        format_str TypeMap.str32, 8, obj
+      def bin32 (obj)
+        format_bin TypeMap.bin32, 8, obj
       end
 
       def map (obj)
-        keys = [];
-        obj.each { |key, value|
-          keys.push(pack(key.to_s) + pack(value));
-        }
-        TypeMap.map + keys.length.to_s + keys.join('');
+      keys = [];
+      obj.each { |key, value|
+        keys.push(pack(key) + pack(value))
+      }
+      if keys.length < 0x10
+        f = [TypeMap.map4, 1]
+      elsif keys.length < 0x100
+        f = [TypeMap.map8, 2]
+      elsif keys.length < 0x10000
+        f = [TypeMap.map16, 4]
+      elsif keys.length < 0x100000000
+        f = [TypeMap.map32, 8]
+      else
+        raise "pack size limit over"
+      end
+      format_uint(f[0], f[1], keys.length) + keys.join('');
       end
 
       def array (obj)
@@ -163,7 +174,18 @@ module AsciiPack
         obj.each { |value|
           keys.push(pack(value));
         }
-        TypeMap.array + keys.length.to_s + keys.join('');
+      if keys.length < 0x10
+        f = [TypeMap.array4, 1]
+      elsif keys.length < 0x100
+        f = [TypeMap.array8, 2]
+      elsif keys.length < 0x10000
+        f = [TypeMap.array16, 4]
+      elsif keys.length < 0x100000000
+        f = [TypeMap.array32, 8]
+      else
+        raise "pack size limit over"
+      end
+      format_uint(f[0], f[1], keys.length) + keys.join('');
       end
 
       def format_uint (type, length, num)
@@ -173,11 +195,11 @@ module AsciiPack
         type + zero + hex;
       end
 
-      def format_str (type, length, str)
-        hex = str.length.to_s(16);
+      def format_bin (type, length, bin)
+        hex = bin.length.to_s(16);
         len = length - hex.length;
         zero = '0' * len;
-        type + zero + hex + str;
+        type + zero + hex + bin;
       end
 
       def to_s16 (a)
