@@ -99,8 +99,7 @@ this.AsciiPack = this.AsciiPack || (function(){
       return type + zero + hex + bin;
     },
     positive_fixint: function(obj){
-      var t = obj.toString(16).toUpperCase();
-      return typemap['positive_fixint_' + t];
+      return obj.toString(16).toUpperCase();
     },
     uint8: function(obj){
       return this.format_uint(typemap.uint8, 2, obj);
