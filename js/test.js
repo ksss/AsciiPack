@@ -9,8 +9,8 @@ this.run = (function(){
       var ap = AsciiPack.pack(intro);
 
       assert.equal(JSON.stringify(intro).length, 27);
-      assert.equal(ap.length, 22);
-      assert.equal(ap, t.map+'2' + t.str4+'7compact' + t.true + t.str4+'6schema' + t.uint4+'0');
+      assert.equal(ap.length, 19);
+      assert.equal(ap, t.map4+'2' + t.fixbin_7+'compact' + t.true + t.fixbin_6+'schema' + t.positive_fixint_0);
       assert.deepEqual(AsciiPack.unpack(ap), intro);
     },
     "int4": function(){
@@ -30,13 +30,15 @@ this.run = (function(){
       format(-0x80000000, t.int32, 9);
     },
     "int64": function(){
-      format(-0x80000001, t.int64, 17);
       // FIXME Accuracy problem
+      // format(-0x80000001, t.int64, 17);
       // format(-0x800000000000000000000, t.int64, 17);
     },
-    "uint4": function(){
-      format(0, t.uint4, 2);
-      format(0xf, t.uint4, 2);
+    "positive fixint": function(){
+      format(0x0, t.positive_fixint_0, 1);
+      format(0x1, t.positive_fixint_1, 1);
+      format(0xe, t.positive_fixint_E, 1);
+      format(0xf, t.positive_fixint_F, 1);
     },
     "uint8": function(){
       format(0x10, t.uint8, 3);
@@ -71,48 +73,59 @@ this.run = (function(){
       }
       var nan = AsciiPack.pack(Number.NaN);
       assert.equal(nan, t.float64 + '7fffffffffffffff');
-      assert.equal(Number.isNaN(AsciiPack.unpack(nan)), true);
+      assert.equal(isNaN(AsciiPack.unpack(nan)), true);
     },
-    "map": function(){
-      format({}, t.map, 2);
-
-      var hash = {
-        "foo": {
-          "bar": {
-            "baz": 0
-          }
-        }
-      };
-      var ap = AsciiPack.pack(hash);
-
-      assert.equal(ap, t.map+'1' + t.str4+'3foo' + t.map+'1' + t.str4+'3bar' + t.map+'1' + t.str4+'3baz' + t.uint4+'0');
-      assert.deepEqual(AsciiPack.unpack(ap), hash);
+    "map4": function(){
+      format_map(0, t.map4);
+      format_map(0xf, t.map4);
     },
-    "array": function(){
-      format([], t.array, 2);
-
-      var array = [1,2,3,[4,5,[6]]];
-      var ap = AsciiPack.pack(array);
-
-      assert.equal(ap, t.array+4 + t.uint4+1 + t.uint4+2 + t.uint4+3 + t.array+3 + t.uint4+4 + t.uint4+5 + t.array+1 + t.uint4+6);
-      assert.deepEqual(AsciiPack.unpack(ap), array);
+    "map8": function(){
+      format_map(0x10, t.map8);
+      format_map(0xff, t.map8);
     },
-    "str4":function(){
-      format("", t.str4, 2);
-      format((new Array(0x10)).join('a'), t.str4, 17);
+    "map16": function(){
+      format_map(0x100, t.map16);
+      format_map(0xffff, t.map16);
     },
-    "str8":function(){
-      format((new Array(0x11)).join('a'), t.str8, 3 + 0x10);
-      format((new Array(0x100)).join('a'), t.str8, 3 + 0xff);
+    "map32": function(){
+      format_map(0x10000, t.map32);
+      // FIXME FATAL ERROR: CALL_AND_RETRY_0 Allocation failed - process out of memory
+      // format_map(0xffffffff, t.map32, 9);
     },
-    "str16":function(){
-      format((new Array(0x101)).join('a'), t.str16, 5 + 0x100);
-      format((new Array(0x10000)).join('a'), t.str16, 5 + 0xffff);
+    "array4": function(){
+      format_array(0, t.array4);
     },
-    "str32":function(){
-      format((new Array(0x10001)).join('a'), t.str32, 9 + 0x10000);
+    "array8": function(){
+      format_array(0x10, t.array8);
+      format_array(0xff, t.array8);
+    },
+    "array16": function(){
+      format_array(0x100, t.array16);
+      format_array(0xffff, t.array16);
+    },
+    "array32": function(){
+      format_array(0x10000, t.array32);
+      // FIXME FATAL ERROR: CALL_AND_RETRY_0 Allocation failed - process out of memory
+      // format_array(0xffffffff, t.array32, 9);
+    },
+    "fixbin":function(){
+      format("", t.fixbin_0, 1);
+      format("0", t.fixbin_1, 2);
+      format("0123456789abcd", t.fixbin_E, 15);
+      format("0123456789abcde", t.fixbin_F, 16);
+    },
+    "bin8":function(){
+      format((new Array(0x11)).join('a'), t.bin8, 3 + 0x10);
+      format((new Array(0x100)).join('a'), t.bin8, 3 + 0xff);
+    },
+    "bin16":function(){
+      format((new Array(0x101)).join('a'), t.bin16, 5 + 0x100);
+      format((new Array(0x10000)).join('a'), t.bin16, 5 + 0xffff);
+    },
+    "bin32":function(){
+      format((new Array(0x10001)).join('a'), t.bin32, 9 + 0x10000);
       // FIXME Invalid array length
-      // format((new Array(0x100000000)).join('a'), t.str32, 9 + 0xffffffff);
+      // format((new Array(0x100000000)).join('a'), t.bin32, 9 + 0xffffffff);
     },
     "nil": function(){
       format(null, t.nil, 1);
@@ -129,19 +142,41 @@ this.run = (function(){
     var ap = AsciiPack.pack(object);
     assert.equal(ap[0], first);
     assert.equal(ap.length, length);
+    assert.equal(AsciiPack.unpack(ap), object);
+  };
+  function format_map (count, first) {
+    var map = {};
+    for (var i = 0; i < count; i++) {
+      map[i] = 0;
+    }
+    var ap = AsciiPack.pack(map);
+    assert.equal(ap[0], first);
+    assert.deepEqual(AsciiPack.unpack(ap), map);
+  };
+  function format_array (count, first) {
+    var array = [];
+    for (var i = 0; i < count; i++) {
+      array[i] = 0;
+    }
+    var ap = AsciiPack.pack(array);
+    assert.equal(ap[0], first);
+    assert.deepEqual(AsciiPack.unpack(ap), array);
   };
 
   return function (ok_callback, finish_callback) {
+    var green = true;
     for (var it in test_case) {
       try {
         var ret = test_case[it]();
         if (ok_callback) ok_callback(it);
       } catch (ex) {
+        green = false;
+        console.log("\n[" + it + "]");
         console.error(ex.message);
         console.error(ex.stack);
       }
     }
-    if (finish_callback) finish_callback();
+    if (finish_callback && green) finish_callback();
   };
 
 })();

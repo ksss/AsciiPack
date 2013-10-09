@@ -5,7 +5,14 @@
 <script src="./assert.js"></script>
 <script src="./test.js"></script>
 <script>
-run();
+function p (log) {
+	document.write(log + "<br>");
+}
+run(function(name){
+  p('[' + name + '] -> ok');
+}, function(){
+  p('all test done.');
+});
 </script>
 </head>
 <body>
