@@ -7,7 +7,7 @@
 ```javascript
 var demo = {"compact":true,"binary":0};
 var ap = AsciiPack.pack(demo);
-console.log(ap); //=> "q2m7compactum6binaryf0"
+console.log(ap); //=> "r2NcompactYMschema0"
 
 var unpacked = AsciiPack.unpack(ap);
 console.log(unpacked); //=> {"compact":true,"binary":0}
