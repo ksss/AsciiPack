@@ -8,7 +8,7 @@ AsciiPack is use easy by Web. because all serialize object is only writed ascii 
     {"compact":true,"binary":0}
 
     AsciiPack is 19 chars:
-    r2NcompactYMschema0
+    r2NcompactYMbinary0
         r2 => map of length 2.
         Ncompact => fixbin of length 7 and value is "compact".
         Y => true.

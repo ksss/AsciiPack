@@ -7,7 +7,7 @@
 ```ruby
 demo = {"compact"=>true,"binary"=>0}
 ap = AsciiPack.pack demo
-p ap #=> "r2NcompactYMschema0"
+p ap #=> "r2NcompactYMbinary0"
 
 unpacked = AsciiPack.unpack ap
 p unpacked #=> {"compact"=>true,"binary"=>0}
