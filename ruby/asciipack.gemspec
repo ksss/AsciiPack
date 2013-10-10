@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = "co000ri@gmail.com"
   spec.description   = %q{AsciiPack is an object serialization inspired by MessagePack.}
   spec.summary       = %q{AsciiPack is an object serialization inspired by MessagePack.}
-  spec.homepage      = ""
+  spec.homepage      = "http://ksss.github.io/AsciiPack"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
