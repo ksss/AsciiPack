@@ -51,5 +51,3 @@ end
 }.each { |key, value|
   json_asciipack key, value
 }
-
-p AsciiPack.pack("あああ")
