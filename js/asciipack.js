@@ -14,9 +14,9 @@ this.AsciiPack = this.AsciiPack || (function(){
     float32:           'k',
     float64:           'l',
 //  (blank):           'm',
-    bin8:              'n',
-    bin16:             'o',
-    bin32:             'p',
+    str8:              'n',
+    str16:             'o',
+    str32:             'p',
 //  (blank):           'q',
     map4:              'r',
     map8:              's',
@@ -43,22 +43,22 @@ this.AsciiPack = this.AsciiPack || (function(){
     positive_fixint_D: 'D',
     positive_fixint_E: 'E',
     positive_fixint_F: 'F',
-    fixbin_0:          'G',
-    fixbin_1:          'H',
-    fixbin_2:          'I',
-    fixbin_3:          'J',
-    fixbin_4:          'K',
-    fixbin_5:          'L',
-    fixbin_6:          'M',
-    fixbin_7:          'N',
-    fixbin_8:          'O',
-    fixbin_9:          'P',
-    fixbin_A:          'Q',
-    fixbin_B:          'R',
-    fixbin_C:          'S',
-    fixbin_D:          'T',
-    fixbin_E:          'U',
-    fixbin_F:          'V',
+    fixstr_0:          'G',
+    fixstr_1:          'H',
+    fixstr_2:          'I',
+    fixstr_3:          'J',
+    fixstr_4:          'K',
+    fixstr_5:          'L',
+    fixstr_6:          'M',
+    fixstr_7:          'N',
+    fixstr_8:          'O',
+    fixstr_9:          'P',
+    fixstr_A:          'Q',
+    fixstr_B:          'R',
+    fixstr_C:          'S',
+    fixstr_D:          'T',
+    fixstr_E:          'U',
+    fixstr_F:          'V',
     nil:               'W',
     false:             'X',
     true:              'Y',
@@ -186,24 +186,24 @@ this.AsciiPack = this.AsciiPack || (function(){
       }
       return this.format_uint(f[0], f[1], keys.length) + keys.join('');
     },
-    format_bin: function(type, length, bin){
-      var hex = bin.length.toString(16);
+    format_str: function(type, length, str){
+      var hex = str.length.toString(16);
       var len = length - hex.length;
       var zero = '';
       while (len--) zero += '0';
-      return type + zero + hex + bin;
+      return type + zero + hex + str;
     },
-    fixbin: function(bin){
-      return String.fromCharCode(bin.length + 71) + bin;
+    fixstr: function(str){
+      return String.fromCharCode(str.length + 71) + str;
     },
-    bin8: function(bin){
-      return typemap.bin8 + bin.length.toString(16) + bin;
+    str8: function(str){
+      return typemap.str8 + str.length.toString(16) + str;
     },
-    bin16: function(bin){
-      return this.format_bin(typemap.bin16, 4, bin);
+    str16: function(str){
+      return this.format_str(typemap.str16, 4, str);
     },
-    bin32: function(bin){
-      return this.format_bin(typemap.bin32, 8, bin);
+    str32: function(str){
+      return this.format_str(typemap.str32, 8, str);
     },
     pack: function(obj){
       switch ({}.toString.call(obj)) {
@@ -268,13 +268,13 @@ this.AsciiPack = this.AsciiPack || (function(){
 
       case '[object String]':
         if (obj.length < 0x10) {
-          return this.fixbin(obj);
+          return this.fixstr(obj);
         } else if (obj.length < 0x100) {
-          return this.bin8(obj);
+          return this.str8(obj);
         } else if (obj.length < 0x10000) {
-          return this.bin16(obj);
+          return this.str16(obj);
         } else if (obj.length < 0x100000000) {
-          return this.bin32(obj);
+          return this.str32(obj);
         } else {
           throw new RangeError("pack size limit over");
         }
@@ -384,19 +384,19 @@ this.AsciiPack = this.AsciiPack || (function(){
     array8: function(){ return this.array(2); },
     array16: function(){ return this.array(4); },
     array32: function(){ return this.array(8); },
-    fixbin: function () {
-      var len = parseInt(this.ch.charCodeAt(0) - 71, 16); // 71 = typemap.fixbin_0.charCodeAt(0)
+    fixstr: function () {
+      var len = parseInt(this.ch.charCodeAt(0) - 71, 16); // 71 = typemap.fixstr_0.charCodeAt(0)
       return this.cut(len);
     },
-    bin8: function () {
+    str8: function () {
       var len = parseInt(this.cut(2), 16);
       return this.cut(len);
     },
-    bin16: function () {
+    str16: function () {
       var len = parseInt(this.cut(4), 16);
       return this.cut(len);
     },
-    bin32: function () {
+    str32: function () {
       var len = parseInt(this.cut(8), 16);
       return this.cut(len);
     },
@@ -414,9 +414,9 @@ this.AsciiPack = this.AsciiPack || (function(){
       case typemap.uint32:  return this.uint32();
       case typemap.uint64:  return this.uint64();
       case typemap.float64: return this.float64();
-      case typemap.bin8:    return this.bin8();
-      case typemap.bin16:   return this.bin16();
-      case typemap.bin32:   return this.bin32();
+      case typemap.str8:    return this.str8();
+      case typemap.str16:   return this.str16();
+      case typemap.str32:   return this.str32();
       case typemap.map4:    return this.map4();
       case typemap.map8:    return this.map8();
       case typemap.map16:   return this.map16();
@@ -444,10 +444,23 @@ this.AsciiPack = this.AsciiPack || (function(){
       case typemap.positive_fixint_D: return 13;
       case typemap.positive_fixint_E: return 14;
       case typemap.positive_fixint_F: return 15;
+      case typemap.fixstr_0: return this.fixstr();
+      case typemap.fixstr_1: return this.fixstr();
+      case typemap.fixstr_2: return this.fixstr();
+      case typemap.fixstr_3: return this.fixstr();
+      case typemap.fixstr_4: return this.fixstr();
+      case typemap.fixstr_5: return this.fixstr();
+      case typemap.fixstr_6: return this.fixstr();
+      case typemap.fixstr_7: return this.fixstr();
+      case typemap.fixstr_8: return this.fixstr();
+      case typemap.fixstr_9: return this.fixstr();
+      case typemap.fixstr_A: return this.fixstr();
+      case typemap.fixstr_B: return this.fixstr();
+      case typemap.fixstr_C: return this.fixstr();
+      case typemap.fixstr_D: return this.fixstr();
+      case typemap.fixstr_E: return this.fixstr();
+      case typemap.fixstr_F: return this.fixstr();
       default:
-        if (/[G-V]/.test(this.ch)) {
-          return this.fixbin();
-        }
         throw new Error("undefined type " + this.ch + ',ap:' + this.ap + ',at:' + this.at);
       }
     }

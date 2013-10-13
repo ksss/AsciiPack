@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#! /usr/str/env node
 
 var AsciiPack = require('./asciipack').AsciiPack;
 
@@ -38,8 +38,8 @@ var str16 = (new Array(0x1000)).join('a');
 var cases = {
   "positive fixint": 0,
   "uint 4": 16,
-  "fixbin": "",
-  "bin 8": '0123456789abcdef',
+  "fixstr": "",
+  "str 8": '0123456789abcdef',
   "float 64": 1/3,
   "map 4": {},
   "array 4": [],
