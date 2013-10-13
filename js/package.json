@@ -1,6 +1,6 @@
 {
   "name": "asciipack",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "AsciiPack is an object serialization inspired by MessagePack.",
   "main": "asciipack.js",
   "scripts": {
