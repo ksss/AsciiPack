@@ -111,11 +111,14 @@ this.run = (function(){
     "fixbin":function(){
       format("", t.fixbin_0, 1);
       format("0", t.fixbin_1, 2);
+      format("あ", t.fixbin_1, 2);
+      format("漢字", t.fixbin_2, 3);
       format("0123456789abcd", t.fixbin_E, 15);
       format("0123456789abcde", t.fixbin_F, 16);
     },
     "bin8":function(){
       format((new Array(0x11)).join('a'), t.bin8, 3 + 0x10);
+      format((new Array(0x11)).join('あ'), t.bin8, 3 + 0x10);
       format((new Array(0x100)).join('a'), t.bin8, 3 + 0xff);
     },
     "bin16":function(){

@@ -1,4 +1,4 @@
-# encoding: ascii-8bit
+# encoding: utf-8
 
 require 'spec_helper'
 
@@ -6,6 +6,7 @@ describe AsciiPack do
   it "intro" do
     expect(AsciiPack.pack({"compact"=>true,"binary"=>0})).to eq('r2NcompactYMbinary0')
   end
+
   it "int 4" do
     format -1, T.int4, 2
     format -8, T.int4, 2
@@ -76,6 +77,8 @@ describe AsciiPack do
   it "fixbin" do
     format "", T.fixbin_0, 1
     format " ", T.fixbin_1, 2
+    format "あ", T.fixbin_1, 2
+    format "漢字", T.fixbin_2, 3
     format " " * 0xe, T.fixbin_E, 15
     format " " * 0xf, T.fixbin_F, 16
   end

@@ -91,13 +91,6 @@ this.AsciiPack = this.AsciiPack || (function(){
       while(len--) zero += '0';
       return type + zero + hex;
     },
-    format_bin: function(type, length, bin){
-      var hex = bin.length.toString(16);
-      var len = length - hex.length;
-      var zero = '';
-      while (len--) zero += '0';
-      return type + zero + hex + bin;
-    },
     positive_fixint: function(obj){
       return obj.toString(16).toUpperCase();
     },
@@ -131,7 +124,7 @@ this.AsciiPack = this.AsciiPack || (function(){
       ]);
     },
     int64: function(obj){
-      var high = Math.floor(obj * Math.pow(2, -256));
+      var high = Math.floor(obj / 0x100000000);
       var low = obj & 0xffffffff;
       return typemap.int64 + this.toString16([
         (high >> 24) & 0xff, (high >> 16) & 0xff,
@@ -192,6 +185,13 @@ this.AsciiPack = this.AsciiPack || (function(){
         throw new RangeError("pack size limit over");
       }
       return this.format_uint(f[0], f[1], keys.length) + keys.join('');
+    },
+    format_bin: function(type, length, bin){
+      var hex = bin.length.toString(16);
+      var len = length - hex.length;
+      var zero = '';
+      while (len--) zero += '0';
+      return type + zero + hex + bin;
     },
     fixbin: function(bin){
       return String.fromCharCode(bin.length + 71) + bin;
