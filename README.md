@@ -10,9 +10,9 @@ AsciiPack is use easy by Web. because all serialize object is only writed ascii 
     AsciiPack is 19 chars:
     r2NcompactYMbinary0
         r2 => map of length 2.
-        Ncompact => fixbin of length 7 and value is "compact".
+        Ncompact => string of length 7 and value is "compact".
         Y => true.
-        Mbinary => fixbin of length 6 abd value is "binary".
+        Mbinary => string of length 6 abd value is "binary".
         0 => fixint value is 0.
 
 ## Formats
@@ -34,9 +34,9 @@ AsciiPack is use easy by Web. because all serialize object is only writed ascii 
   <tr><td>float 32</td><td>k</td></tr>
   <tr><td>float 64</td><td>l</td></tr>
   <tr><td>(blank)</td><td>m</td></tr>
-  <tr><td>bin 8</td><td>n</td></tr>
-  <tr><td>bin 16</td><td>o</td></tr>
-  <tr><td>bin 32</td><td>p</td></tr>
+  <tr><td>str 8</td><td>n</td></tr>
+  <tr><td>str 16</td><td>o</td></tr>
+  <tr><td>str 32</td><td>p</td></tr>
   <tr><td>(blank)</td><td>q</td></tr>
   <tr><td>map 4</td><td>r</td></tr>
   <tr><td>map 8</td><td>s</td></tr>
@@ -48,7 +48,7 @@ AsciiPack is use easy by Web. because all serialize object is only writed ascii 
   <tr><td>array 32</td><td>y</td></tr>
   <tr><td>(blank)</td><td>z</td></tr>
   <tr><td>positive fixint</td><td>0-9A-F</td></tr>
-  <tr><td>fixbin</td><td>G-V</td></tr>
+  <tr><td>fixstr</td><td>G-V</td></tr>
   <tr><td>nil</td><td>W</td></tr>
   <tr><td>false</td><td>X</td></tr>
   <tr><td>true</td><td>Y</td></tr>
@@ -102,17 +102,17 @@ Value abide IEEE 754 format.
     float 64:
     l | FFFFFFFFFFFFFFFF
 
-### bin
-    fixbin:
+### str
+    fixstr:
     G-V | data
 
-    bin 8:
+    str 8:
     n | FF | data
 
-    bin 16:
+    str 16:
     o | FFFF | data
 
-    bin 32:
+    str 32:
     p | FFFFFFFF | data
 
 ### map

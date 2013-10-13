@@ -13,7 +13,7 @@ module AsciiPack
       move
       case @ch
       when /[0-9A-F]/; positive_fixint
-      when /[G-V]/; fixbin
+      when /[G-V]/; fixstr
       when TypeMap.int4; int4
       when TypeMap.int8; int8
       when TypeMap.int16; int16
@@ -32,9 +32,9 @@ module AsciiPack
       when TypeMap.array8; array8
       when TypeMap.array16; array16
       when TypeMap.array32; array32
-      when TypeMap.bin8; bin8
-      when TypeMap.bin16; bin16
-      when TypeMap.bin32; bin32
+      when TypeMap.str8; str8
+      when TypeMap.str16; str16
+      when TypeMap.str32; str32
       when TypeMap.nil; nil
       when TypeMap.false; false
       when TypeMap.true; true
@@ -155,22 +155,22 @@ private
     def array16; array(4) end
     def array32; array(8) end
 
-    def fixbin
-      len = @ch.ord - 71 # 71 = TypeMap.fixbin_0.ord
+    def fixstr
+      len = @ch.ord - 71 # 71 = TypeMap.fixstr_0.ord
       cut(len)
     end
 
-    def bin8
+    def str8
       len = cut(2).to_i(16)
       cut(len)
     end
 
-    def bin16
+    def str16
       len = cut(4).to_i(16)
       cut(len)
     end
 
-    def bin32
+    def str32
       len = cut(8).to_i(16)
       cut(len)
     end
