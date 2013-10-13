@@ -4,13 +4,13 @@ this.run = (function(){
     "intro": function(){
       var intro = {
         "compact": true,
-        "schema": 0,
+        "binary": 0,
       };
       var ap = AsciiPack.pack(intro);
 
       assert.equal(JSON.stringify(intro).length, 27);
       assert.equal(ap.length, 19);
-      assert.equal(ap, t.map4+'2' + t.fixbin_7+'compact' + t.true + t.fixbin_6+'schema' + t.positive_fixint_0);
+      assert.equal(ap, t.map4+'2' + t.fixstr_7+'compact' + t.true + t.fixstr_6+'binary' + t.positive_fixint_0);
       assert.deepEqual(AsciiPack.unpack(ap), intro);
     },
     "int4": function(){
@@ -108,27 +108,27 @@ this.run = (function(){
       // FIXME FATAL ERROR: CALL_AND_RETRY_0 Allocation failed - process out of memory
       // format_array(0xffffffff, t.array32, 9);
     },
-    "fixbin":function(){
-      format("", t.fixbin_0, 1);
-      format("0", t.fixbin_1, 2);
-      format("あ", t.fixbin_1, 2);
-      format("漢字", t.fixbin_2, 3);
-      format("0123456789abcd", t.fixbin_E, 15);
-      format("0123456789abcde", t.fixbin_F, 16);
+    "fixstr":function(){
+      format("", t.fixstr_0, 1);
+      format("0", t.fixstr_1, 2);
+      format("あ", t.fixstr_1, 2);
+      format("漢字", t.fixstr_2, 3);
+      format("0123456789abcd", t.fixstr_E, 15);
+      format("0123456789abcde", t.fixstr_F, 16);
     },
-    "bin8":function(){
-      format((new Array(0x11)).join('a'), t.bin8, 3 + 0x10);
-      format((new Array(0x11)).join('あ'), t.bin8, 3 + 0x10);
-      format((new Array(0x100)).join('a'), t.bin8, 3 + 0xff);
+    "str8":function(){
+      format((new Array(0x11)).join('a'), t.str8, 3 + 0x10);
+      format((new Array(0x11)).join('あ'), t.str8, 3 + 0x10);
+      format((new Array(0x100)).join('a'), t.str8, 3 + 0xff);
     },
-    "bin16":function(){
-      format((new Array(0x101)).join('a'), t.bin16, 5 + 0x100);
-      format((new Array(0x10000)).join('a'), t.bin16, 5 + 0xffff);
+    "str16":function(){
+      format((new Array(0x101)).join('a'), t.str16, 5 + 0x100);
+      format((new Array(0x10000)).join('a'), t.str16, 5 + 0xffff);
     },
-    "bin32":function(){
-      format((new Array(0x10001)).join('a'), t.bin32, 9 + 0x10000);
+    "str32":function(){
+      format((new Array(0x10001)).join('a'), t.str32, 9 + 0x10000);
       // FIXME Invalid array length
-      // format((new Array(0x100000000)).join('a'), t.bin32, 9 + 0xffffffff);
+      // format((new Array(0x100000000)).join('a'), t.str32, 9 + 0xffffffff);
     },
     "nil": function(){
       format(null, t.nil, 1);

@@ -44,13 +44,13 @@ module AsciiPack
         when obj.kind_of?(String)
           case obj.length
           when 0...0x10
-            fixbin obj
+            fixstr obj
           when 0x10...0x100
-            bin8 obj
+            str8 obj
           when 0x100...0x10000
-            bin16 obj
+            str16 obj
           when 0x10000...0x100000000
-            bin32 obj
+            str32 obj
           else
             raise "pack size limit over"
           end
@@ -134,20 +134,20 @@ module AsciiPack
         ])
       end
 
-      def fixbin (obj)
+      def fixstr (obj)
         (obj.length + 71).chr + obj
       end
 
-      def bin8 (obj)
-        format_bin TypeMap.bin8, 2, obj
+      def str8 (obj)
+        format_str TypeMap.str8, 2, obj
       end
 
-      def bin16 (obj)
-        format_bin TypeMap.bin16, 4, obj
+      def str16 (obj)
+        format_str TypeMap.str16, 4, obj
       end
 
-      def bin32 (obj)
-        format_bin TypeMap.bin32, 8, obj
+      def str32 (obj)
+        format_str TypeMap.str32, 8, obj
       end
 
       def map (obj)
@@ -195,11 +195,11 @@ module AsciiPack
         type + zero + hex;
       end
 
-      def format_bin (type, length, bin)
-        hex = bin.length.to_s(16);
+      def format_str (type, length, str)
+        hex = str.length.to_s(16);
         len = length - hex.length;
         zero = '0' * len;
-        type + zero + hex + bin;
+        type + zero + hex + str;
       end
 
       def to_s16 (a)

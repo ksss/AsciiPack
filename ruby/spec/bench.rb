@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#! /usr/str/env ruby
 
 lib = File.expand_path('../../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
@@ -42,8 +42,8 @@ end
 {
   "positive fixint" => 0,
   "uint 4" => 16,
-  "fixbin" => "",
-  "bin 8" => '0123456789abcdef',
+  "fixstr" => "",
+  "str 8" => '0123456789abcdef',
   "float 64" => 1/3,
   "map 4" => {},
   "array 4" => [],
