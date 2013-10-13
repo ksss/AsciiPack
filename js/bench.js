@@ -1,4 +1,4 @@
-#! /usr/str/env node
+#! /usr/bin/env node
 
 var AsciiPack = require('./asciipack').AsciiPack;
 
