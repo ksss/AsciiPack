@@ -1,5 +1,3 @@
-require 'asciipack/typemap.rb'
-
 module AsciiPack
   class Packer
     class << self
@@ -55,38 +53,38 @@ module AsciiPack
             raise "pack size limit over"
           end
         when obj.nil?
-          TypeMap.nil
+          "W"
         when obj == false
-          TypeMap.false
+          "X"
         when obj == true
-          TypeMap.true
+          "Y"
         end
       end
 
       private
 
       def int4 (obj)
-        TypeMap.int4 + ((obj & 0xf).to_s(16))
+        "a" + ((obj & 0xf).to_s(16))
       end
 
       def int8 (obj)
-        TypeMap.int8 + ((obj & 0xff).to_s(16))
+        "b" + ((obj & 0xff).to_s(16))
       end
 
       def int16 (obj)
-        TypeMap.int16 + ((obj & 0xffff).to_s(16))
+        "c" + ((obj & 0xffff).to_s(16))
       end
 
       def int16 (obj)
-        TypeMap.int16 + ((obj & 0xffff).to_s(16))
+        "c" + ((obj & 0xffff).to_s(16))
       end
 
       def int32 (obj)
-        TypeMap.int32 + ((obj & 0xffffffff).to_s(16))
+        "d" + ((obj & 0xffffffff).to_s(16))
       end
 
       def int64 (obj)
-        TypeMap.int64 + ((obj & 0xffffffffffffffff).to_s(16))
+        "e" + ((obj & 0xffffffffffffffff).to_s(16))
       end
 
       def positive_fixint (obj)
@@ -94,27 +92,27 @@ module AsciiPack
       end
 
       def uint8 (obj)
-        format_uint(TypeMap.uint8, 2, obj)
+        format_uint("g", 2, obj)
       end
 
       def uint16 (obj)
-        format_uint(TypeMap.uint16, 4, obj)
+        format_uint("h", 4, obj)
       end
 
       def uint32 (obj)
-        format_uint(TypeMap.uint32, 8, obj)
+        format_uint("i", 8, obj)
       end
 
       def uint64 (obj)
-        format_uint(TypeMap.uint64, 16, obj)
+        format_uint("j", 16, obj)
       end
 
       def float64 (obj)
         unless obj.finite?
           case obj.infinite?
-          when 1;  return TypeMap.float64 + '7ff0000000000000' # +∞
-          when -1; return TypeMap.float64 + 'fff0000000000000' # -∞
-          else;    return TypeMap.float64 + '7fffffffffffffff' # NAN
+          when 1;  return "l" + '7ff0000000000000' # +∞
+          when -1; return "l" + 'fff0000000000000' # -∞
+          else;    return "l" + '7fffffffffffffff' # NAN
           end
         end
 
@@ -126,7 +124,7 @@ module AsciiPack
         exp |= 0x800 if sign
         high = ((frac / 0x100000000).to_i & 0xfffff) | (exp << 20)
 
-        TypeMap.float64 + to_s16([
+        "l" + to_s16([
           (high >> 24) & 0xff, (high >> 16) & 0xff,
           (high >>  8) & 0xff, (high)       & 0xff,
           (low  >> 24) & 0xff, (low  >> 16) & 0xff,
@@ -139,15 +137,15 @@ module AsciiPack
       end
 
       def str8 (obj)
-        format_str TypeMap.str8, 2, obj
+        format_str "n", 2, obj
       end
 
       def str16 (obj)
-        format_str TypeMap.str16, 4, obj
+        format_str "o", 4, obj
       end
 
       def str32 (obj)
-        format_str TypeMap.str32, 8, obj
+        format_str "p", 8, obj
       end
 
       def map (obj)
@@ -156,13 +154,13 @@ module AsciiPack
         keys.push(pack(key) + pack(value))
       }
       if keys.length < 0x10
-        f = [TypeMap.map4, 1]
+        f = ["r", 1]
       elsif keys.length < 0x100
-        f = [TypeMap.map8, 2]
+        f = ["s", 2]
       elsif keys.length < 0x10000
-        f = [TypeMap.map16, 4]
+        f = ["t", 4]
       elsif keys.length < 0x100000000
-        f = [TypeMap.map32, 8]
+        f = ["u", 8]
       else
         raise "pack size limit over"
       end
@@ -175,13 +173,13 @@ module AsciiPack
           keys.push(pack(value));
         }
       if keys.length < 0x10
-        f = [TypeMap.array4, 1]
+        f = ["v", 1]
       elsif keys.length < 0x100
-        f = [TypeMap.array8, 2]
+        f = ["w", 2]
       elsif keys.length < 0x10000
-        f = [TypeMap.array16, 4]
+        f = ["x", 4]
       elsif keys.length < 0x100000000
-        f = [TypeMap.array32, 8]
+        f = ["y", 8]
       else
         raise "pack size limit over"
       end
