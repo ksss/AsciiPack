@@ -36,12 +36,14 @@ def bench(name)
   100000.times {
     yield
   }
-  p name + ': ' + (Time.now - t).to_s + 'ms'
+  p name + ': ' + (Time.now - t).to_s + 's'
 end
 
+tt = Time.now
 {
   "positive fixint" => 0,
   "uint 4" => 16,
+  "int 4" => -1,
   "fixstr" => "",
   "str 8" => '0123456789abcdef',
   "float 64" => 1/3,
@@ -51,3 +53,5 @@ end
 }.each { |key, value|
   json_asciipack key, value
 }
+
+p 'total: ' + (Time.now - tt).to_s + 's'

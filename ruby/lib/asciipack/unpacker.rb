@@ -1,9 +1,6 @@
 module AsciiPack
   class Unpacker
     @@fixmap = {
-      "W" => nil,
-      "X" => false,
-      "Y" => true,
       "0" => 0x0,
       "1" => 0x1,
       "2" => 0x2,
@@ -20,6 +17,9 @@ module AsciiPack
       "D" => 0xd,
       "E" => 0xe,
       "F" => 0xf,
+      "W" => nil,
+      "X" => false,
+      "Y" => true,
     }.freeze
 
     def initialize (ap)
@@ -172,7 +172,7 @@ private
     def array32; array(8) end
 
     def fixstr
-      len = @ch.ord - 71 # 71 = TypeMap["fixstr_0"].ord
+      len = @ch.ord - 71 # 71 = "G".ord
       cut(len)
     end
 
