@@ -16,22 +16,6 @@ Unpacker_alloc(VALUE klass)
 	return Data_Wrap_Struct(klass, unpacker_mark, -1, ptr);
 }
 
-static void
-move (unpacker_t* ptr)
-{
-	ptr->ch++;
-}
-
-static char*
-cut (unpacker_t* ptr, size_t n)
-{
-	char* ret = malloc(sizeof(char) * n);
-	memset(ret, 0, n);
-	memcpy(ret, ptr->ch, n);
-	ptr->ch += n;
-	return ret;
-}
-
 static VALUE
 Unpacker_init(VALUE self, VALUE obj, int argc, VALUE *argv, VALUE size)
 {
@@ -110,6 +94,14 @@ Unpacker_float (unpacker_t* ptr, size_t len)
 }
 
 static VALUE
+Unpacker_str (unpacker_t* ptr, size_t len)
+{
+	VALUE str = rb_str_new(ptr->ch, len);
+	ptr->ch += len;
+	return str;
+}
+
+static VALUE
 Unpacker_map (unpacker_t* ptr, size_t len)
 {
 	VALUE map = rb_hash_new();
@@ -169,11 +161,14 @@ Unpacker_read (unpacker_t* ptr)
 		case 'l': // float 64
 			return rb_float_new(Unpacker_float(ptr, 16));
 		case 'n':
-//			return rb_funcall(self, rb_intern("str8"), 0);
+			num = Unpacker_uint(ptr, 2);
+			return Unpacker_str(ptr, num);
 		case 'o':
-//			return rb_funcall(self, rb_intern("str16"), 0);
+			num = Unpacker_uint(ptr, 4);
+			return Unpacker_str(ptr, num);
 		case 'p':
-//			return rb_funcall(self, rb_intern("str32"), 0);
+			num = Unpacker_uint(ptr, 8);
+			return Unpacker_str(ptr, num);
 		case 'r':
 			num = Unpacker_uint(ptr, 1);
 			return Unpacker_map(ptr, num);
@@ -230,7 +225,8 @@ Unpacker_read (unpacker_t* ptr)
 		case 'T':
 		case 'U':
 		case 'V':
-	//		return rb_funcall(self, rb_intern("fixstr"), 0);
+			num = *(ptr->ch - 1) - 'G';
+			return Unpacker_str(ptr, num);
 		case 'W': return Qnil;
 		case 'X': return Qfalse;
 		case 'Y': return Qtrue;
@@ -250,10 +246,6 @@ Unpacker_unpack (VALUE self)
 void
 Init_asciipack(void)
 {
-// TODO
-//	rb_define_method(rb_cArray, "to_asciipack", obj_to_asciipack, -1);
-//	rb_define_method(rb_cHash,  "to_asciipack", obj_to_asciipack, -1);
-
 	VALUE mAsciiPack = rb_path2class("AsciiPack");
 	VALUE cAsciiPack_Unpacker = rb_define_class_under(mAsciiPack, "Unpacker", rb_cObject);
 

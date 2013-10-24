@@ -73,32 +73,32 @@ describe AsciiPack do
     expect(AsciiPack.pack(1 / 0.0)).to eq(T.float64 + '7ff0000000000000')
     expect(AsciiPack.pack(-1 / 0.0)).to eq(T.float64 + 'fff0000000000000')
   end
-#
-#  it "fixstr" do
-#    format "", T.fixstr_0, 1
-#    format " ", T.fixstr_1, 2
+
+  it "fixstr" do
+    format "", T.fixstr_0, 1
+    format " ", T.fixstr_1, 2
 #    format "あ", T.fixstr_1, 2
 #    format "漢字", T.fixstr_2, 3
-#    format " " * 0xe, T.fixstr_E, 15
-#    format " " * 0xf, T.fixstr_F, 16
-#  end
-#
-#  it "str 8" do
-#    format "a" * 0x10, T.str8, 3 + 0x10
-#    format "a" * 0xff, T.str8, 3 + 0xff
-#  end
-#
-#  it "str 16" do
-#    format "a" * 0x100, T.str16, 5 + 0x100
-#    format "a" * 0xffff, T.str16, 5 + 0xffff
-#  end
-#
-#  it "str 32" do
-#    format "a" * 0x10000, T.str32, 9 + 0x10000
-#    # FIXME too late
-#    # format "a" * 0xffffffff, T.str32, 9 + 0xffffffff
-#  end
-#
+    format " " * 0xe, T.fixstr_E, 15
+    format " " * 0xf, T.fixstr_F, 16
+  end
+
+  it "str 8" do
+    format "a" * 0x10, T.str8, 3 + 0x10
+    format "a" * 0xff, T.str8, 3 + 0xff
+  end
+
+  it "str 16" do
+    format "a" * 0x100, T.str16, 5 + 0x100
+    format "a" * 0xffff, T.str16, 5 + 0xffff
+  end
+
+  it "str 32" do
+    format "a" * 0x10000, T.str32, 9 + 0x10000
+    # FIXME too late
+    # format "a" * 0xffffffff, T.str32, 9 + 0xffffffff
+  end
+
   it "map 4" do
     format_map 0, T.map4
     format_map 0xf, T.map4
