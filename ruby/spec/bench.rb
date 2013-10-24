@@ -7,6 +7,11 @@ require 'asciipack'
 require 'json'
 require 'msgpack'
 
+def count
+  100000
+end
+
+puts "count:#{count}"
 def json_asciipack(name, obj)
 #  obj = [obj]
 #  json = obj.to_json
@@ -14,7 +19,7 @@ def json_asciipack(name, obj)
 #  ms = Marshal.dump obj
   msg = MessagePack.pack obj
 
-  p '[' + name + ']'
+  puts '[' + name + ']'
   bench "AsciiPack.pack" do AsciiPack.pack obj end
   bench "AsciiPack.unpack" do AsciiPack.unpack ap end
 #  bench "JSON.generate" do obj.to_json end
@@ -33,10 +38,10 @@ end
 
 def bench(name)
   t = Time.now
-  100000.times {
+  count.times {
     yield
   }
-  p name + ': ' + (Time.now - t).to_s + 's'
+  puts name + ': ' + (Time.now - t).to_s + 's'
 end
 
 tt = Time.now
@@ -48,10 +53,10 @@ tt = Time.now
   "int 64" => -0x8000000000000000,
 #  "fixstr" => "",
 #  "str 8" => '0123456789abcdef',
-#  "float 64" => 1/3,
-#  "map 4" => {},
-#  "array 4" => [],
-#  "array 8" => Array.new(16,0),
+  "float 64" => 1/3,
+  "map 4" => {},
+  "array 4" => [],
+  "array 8" => Array.new(16,0),
   "nil" => nil,
 }.each { |key, value|
   json_asciipack key, value

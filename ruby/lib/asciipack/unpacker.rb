@@ -28,47 +28,47 @@ module AsciiPack
 #      @ch = @ap[0]
 #    end
 #
-##    def unpack
-##      move
-##
-##      if @@fixmap.key?(@ch)
-##        return @@fixmap[@ch]
-##      end
-##
-##      case @ch
-##      when "a"; int4
-##      when "b"; int8
-##      when "c"; int16
-##      when "d"; int32
-##      when "e"; int64
-##      when "g"; uint8
-##      when "h"; uint16
-##      when "i"; uint32
-##      when "j"; uint64
-##      when "l"; float64
-##      when "n"; str8
-##      when "o"; str16
-##      when "p"; str32
-##      when "r"; map4
-##      when "s"; map8
-##      when "t"; map16
-##      when "u"; map32
-##      when "v"; array4
-##      when "w"; array8
-##      when "x"; array16
-##      when "y"; array32
-##      when /[G-V]/; fixstr
-##      else raise "undefined type " + @ch.to_s
-##      end
-##    end
+#    def unpack
+#      move
+#
+#      if @@fixmap.key?(@ch)
+#        return @@fixmap[@ch]
+#      end
+#
+#      case @ch
+#      when "a"; int4
+#      when "b"; int8
+#      when "c"; int16
+#      when "d"; int32
+#      when "e"; int64
+#      when "g"; uint8
+#      when "h"; uint16
+#      when "i"; uint32
+#      when "j"; uint64
+#      when "l"; float64
+#      when "n"; str8
+#      when "o"; str16
+#      when "p"; str32
+#      when "r"; map4
+#      when "s"; map8
+#      when "t"; map16
+#      when "u"; map32
+#      when "v"; array4
+#      when "w"; array8
+#      when "x"; array16
+#      when "y"; array32
+#      when /[G-V]/; fixstr
+#      else raise "undefined type " + @ch.to_s
+#      end
+#    end
 #
 #private
 #
-##    def move
-##      @ch = @ap[@at]
-##      @at += 1
-##      @ch
-##    end
+#    def move
+#      @ch = @ap[@at]
+#      @at += 1
+#      @ch
+#    end
 #
 #    def cut (len)
 #      ret = @ap[@at...(@at + len)]
@@ -191,7 +191,7 @@ module AsciiPack
 #      cut(len)
 #    end
 #  end
-#
+
   class << self
     def unpack (obj)
       unpacker = Unpacker.new obj

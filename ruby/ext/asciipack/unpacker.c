@@ -1,27 +1,8 @@
 #include "unpacker.h"
 
 VALUE cAsciiPack_Unpacker;
-static ID id_positive_fixint, id_fixstr;
-static ID id_int4, id_int8, id_int16, id_int32, id_int64;
-static ID id_uint8, id_uint16, id_uint32, id_uint64;
-static ID id_str8, id_str16, id_str32;
-static ID id_float32, id_float64;
-static ID id_map4, id_map8, id_map16, id_map32;
-static ID id_array4, id_array8, id_array16, id_array32;
-static ID id_move, id_next, id_slice;
-static ID id_iv_ap, id_iv_at, id_iv_ch;
 
-typedef struct unpacker {
-	char* buffer;
-	char* ch;
-} unpacker_t;
-
-#define UNPACKER(from, name) \
-	unpacker_t* name; \
-	Data_Get_Struct(from, unpacker_t, name); \
-	if (name == NULL) { \
-		rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be.'"); \
-	}
+static VALUE Unpacker_read(unpacker_t* ptr);
 
 static void
 unpacker_mark(unpacker_t* ptr)
@@ -86,19 +67,25 @@ to_i16 (char ch)
 	return ret;
 }
 
-uint64_t
-Unpacker_int (unpacker_t* ptr, size_t n)
+static uint64_t
+to_i16all (unpacker_t* ptr, int len)
 {
-	size_t len = n;
-	char* head = ptr->ch;
 	uint64_t ret = 0;
-	uint64_t base = 1;
-
 	while (len--) {
 		ret += to_i16(*ptr->ch);
 		ptr->ch++;
 		if (len != 0) ret = ret << 4;
 	}
+	return ret;
+}
+
+static uint64_t
+Unpacker_int (unpacker_t* ptr, size_t len)
+{
+	size_t n = len;
+	char* head = ptr->ch;
+	uint64_t base = 1;
+	uint64_t ret = to_i16all(ptr, len);
 
 	if ('8' <= *head) {
 		ret -= (base << (n * 4));
@@ -106,90 +93,56 @@ Unpacker_int (unpacker_t* ptr, size_t n)
 	return ret;
 }
 
-uint64_t
-Unpacker_uint (unpacker_t* ptr, size_t n)
+static uint64_t
+Unpacker_uint (unpacker_t* ptr, size_t len)
 {
-	size_t len = n;
-	char* head = ptr->ch;
-	uint64_t ret = 0;
-	uint64_t base = 1;
-
-	while (len--) {
-		ret += to_i16(*ptr->ch);
-		ptr->ch++;
-		if (len != 0) ret = ret << 4;
-	}
-
-	return ret;
+	return to_i16all(ptr, len);
 }
 
-double
-Unpacker_float (unpacker_t* ptr, int n)
+static double
+Unpacker_float (unpacker_t* ptr, size_t len)
 {
-	int len = n;
-	int width = 16 - n;
-	uint64_t ret = 0;
-	int num = 0;
-	bool sign = 0;
-	int exp = 0;
-	uint64_t frac = 1;
+	uint64_t ret = to_i16all(ptr, len);
+	union udouble converter;
 
-	while (len--) {
-		num += to_i16(*ptr->ch);
-		ptr->ch++;
-		if (len != 0) num = num << 4;
-	}
-
-	sign = num & 0x800;
-	exp = (num & 0x7ff) - 1023;
-
-	frac = frac << 4;
-	while (width--) {
-		frac += to_i16(*ptr->ch);
-		ptr->ch++;
-		if (width != 0) frac = frac << 4;
-	}
-
-//	if (num == 0x7ff && frac != 0) {
-//		return NAN;
-//	} else if (num == 0x7ff && ) {
-//		return INFINITY;
-//	} else
-	return (double) (sign == 0 ? 1 : -1) * frac * (2**(exp - 52))
+	converter.u = ret;
+	return converter.f64;
 }
-//    def float64
-//      # IEEE 752 format
-//      hex = cut(3)
-//      num = hex.to_i(16)
-//      sign = num & 0x800
-//      exp = (num & 0x7ff) - 1023
-//      frac = ('1' + cut(13)).to_i(16)
-//
-//      if hex == '7ff' && frac != 0
-//        return Float.NAN
-//      elsif hex == '7ff' && frac == 0
-//        return Float.INFINITY
-//      elsif hex == 'fff' && frac == 0
-//        return -1 / 0.0
-//      end
-//
-//      ((sign == 0 ? 1 : -1) * frac * (2**(exp - 52))).to_f
 
 static VALUE
-Unpacker_unpack (VALUE self)
+Unpacker_map (unpacker_t* ptr, size_t len)
+{
+	VALUE map = rb_hash_new();
+	while (len--) {
+		rb_hash_aset(map, Unpacker_read(ptr), Unpacker_read(ptr));
+	}
+	return map;
+}
+
+static VALUE
+Unpacker_array (unpacker_t* ptr, size_t len)
+{
+	VALUE array = rb_ary_new2(len);
+	while (len--) {
+		rb_ary_push(array, Unpacker_read(ptr));
+	}
+	return array;
+}
+
+static VALUE
+Unpacker_read (unpacker_t* ptr)
 {
 	uint64_t num;
 
-	UNPACKER(self, ptr);
-	move(ptr);
+	ptr->ch++;
 
 	switch (*(ptr->ch - 1)) {
 		case 'a': // int 4
 			num = Unpacker_int(ptr, 1);
-			return INT2FIX((int)num);
+			return INT2FIX(num);
 		case 'b': // int 8
 			num = Unpacker_int(ptr, 2);
-			return INT2FIX((int)num);
+			return INT2FIX(num);
 		case 'c': // int 16
 			num = Unpacker_int(ptr, 4);
 			return INT2FIX(num);
@@ -199,46 +152,52 @@ Unpacker_unpack (VALUE self)
 		case 'e': // int 64
 			num = Unpacker_int(ptr, 16);
 			return rb_ll2inum(num);
-		case 'g':
+		case 'g': // uint 8
 			num = Unpacker_uint(ptr, 2);
 			return INT2FIX(num);
-		case 'h':
+		case 'h': // uint 16
 			num = Unpacker_uint(ptr, 4);
 			return INT2FIX(num);
-		case 'i':
+		case 'i': // uint 32
 			num = Unpacker_uint(ptr, 8);
 			return LONG2NUM(num);
-		case 'j':
+		case 'j': // uint 64
 			num = Unpacker_uint(ptr, 16);
 			return rb_ull2inum(num);
-		case 'k':
-			num = Unpacker_float(ptr);
-			return rb_float_new(num);
-		case 'l':
-			num = Unpacker_float(ptr);
-			return rb_float_new(num);
+		case 'k': // float 32
+			return rb_float_new(Unpacker_float(ptr, 8));
+		case 'l': // float 64
+			return rb_float_new(Unpacker_float(ptr, 16));
 		case 'n':
-			return rb_funcall(self, rb_intern("str8"), 0);
+//			return rb_funcall(self, rb_intern("str8"), 0);
 		case 'o':
-			return rb_funcall(self, rb_intern("str16"), 0);
+//			return rb_funcall(self, rb_intern("str16"), 0);
 		case 'p':
-			return rb_funcall(self, rb_intern("str32"), 0);
+//			return rb_funcall(self, rb_intern("str32"), 0);
 		case 'r':
-			return rb_funcall(self, id_map4, 0);
+			num = Unpacker_uint(ptr, 1);
+			return Unpacker_map(ptr, num);
 		case 's':
-			return rb_funcall(self, id_map8, 0);
+			num = Unpacker_uint(ptr, 2);
+			return Unpacker_map(ptr, num);
 		case 't':
-			return rb_funcall(self, id_map16, 0);
+			num = Unpacker_uint(ptr, 4);
+			return Unpacker_map(ptr, num);
 		case 'u':
-			return rb_funcall(self, id_map32, 0);
+			num = Unpacker_uint(ptr, 8);
+			return Unpacker_map(ptr, num);
 		case 'v':
-			return rb_funcall(self, id_array4, 0);
+			num = Unpacker_uint(ptr, 1);
+			return Unpacker_array(ptr, num);
 		case 'w':
-			return rb_funcall(self, id_array8, 0);
+			num = Unpacker_uint(ptr, 2);
+			return Unpacker_array(ptr, num);
 		case 'x':
-			return rb_funcall(self, id_array16, 0);
+			num = Unpacker_uint(ptr, 4);
+			return Unpacker_array(ptr, num);
 		case 'y':
-			return rb_funcall(self, id_array32, 0);
+			num = Unpacker_uint(ptr, 8);
+			return Unpacker_array(ptr, num);
 		case '0': return INT2FIX(0);
 		case '1': return INT2FIX(1);
 		case '2': return INT2FIX(2);
@@ -271,7 +230,7 @@ Unpacker_unpack (VALUE self)
 		case 'T':
 		case 'U':
 		case 'V':
-			return rb_funcall(self, rb_intern("fixstr"), 0);
+	//		return rb_funcall(self, rb_intern("fixstr"), 0);
 		case 'W': return Qnil;
 		case 'X': return Qfalse;
 		case 'Y': return Qtrue;
@@ -280,28 +239,20 @@ Unpacker_unpack (VALUE self)
 	return Qnil;
 }
 
+static VALUE
+Unpacker_unpack (VALUE self)
+{
+	UNPACKER(self, ptr);
+
+	return Unpacker_read(ptr);
+}
+
 void
 Init_asciipack(void)
 {
 // TODO
 //	rb_define_method(rb_cArray, "to_asciipack", obj_to_asciipack, -1);
 //	rb_define_method(rb_cHash,  "to_asciipack", obj_to_asciipack, -1);
-
-	id_positive_fixint = rb_intern("positive_fixint");
-	id_map4 = rb_intern("map4");
-	id_map8 = rb_intern("map8");
-	id_map16 = rb_intern("map16");
-	id_map32 = rb_intern("map32");
-	id_array4 = rb_intern("array4");
-	id_array8 = rb_intern("array8");
-	id_array16 = rb_intern("array16");
-	id_array32 = rb_intern("array32");
-	id_move = rb_intern("move");
-	id_iv_ap = rb_intern("@ap");
-	id_iv_at = rb_intern("@at");
-	id_iv_ch = rb_intern("@ch");
-	id_next = rb_intern("next");
-	id_slice = rb_intern("slice");
 
 	VALUE mAsciiPack = rb_path2class("AsciiPack");
 	VALUE cAsciiPack_Unpacker = rb_define_class_under(mAsciiPack, "Unpacker", rb_cObject);

@@ -99,47 +99,47 @@ describe AsciiPack do
 #    # format "a" * 0xffffffff, T.str32, 9 + 0xffffffff
 #  end
 #
-#  it "map 4" do
-#    format_map 0, T.map4
-#    format_map 0xf, T.map4
-#  end
-#
-#  it "map 8" do
-#    format_map 0x10, T.map8
-#    format_map 0xff, T.map8
-#  end
-#
-#  it "map 16" do
-#    format_map 0x100, T.map16
-#    format_map 0xffff, T.map16
-#  end
-#
-#  it "map 32" do
-#    format_map 0x10000, T.map32
-#    # FIXME too late
-#    # format_map 0xffffffff, T.map32
-#  end
-#
-#  it "array 4" do
-#    format_array 0, T.array4
-#    format_array 0xf, T.array4
-#  end
-#
-#  it "array 8" do
-#    format_array 0x10, T.array8
-#    format_array 0xff, T.array8
-#  end
-#
-#  it "array 16" do
-#    format_array 0x100, T.array16
-#    format_array 0xffff, T.array16
-#  end
-#
-#  it "array 32" do
-#    format_array 0x10000, T.array32
-#    # FIXME too late
-#    # format_array 0xffffffff, T.array32
-#  end
+  it "map 4" do
+    format_map 0, T.map4
+    format_map 0xf, T.map4
+  end
+
+  it "map 8" do
+    format_map 0x10, T.map8
+    format_map 0xff, T.map8
+  end
+
+  it "map 16" do
+    format_map 0x100, T.map16
+    format_map 0xffff, T.map16
+  end
+
+  it "map 32" do
+    format_map 0x10000, T.map32
+    # FIXME too late
+    # format_map 0xffffffff, T.map32
+  end
+
+  it "array 4" do
+    format_array 0, T.array4
+    format_array 0xf, T.array4
+  end
+
+  it "array 8" do
+    format_array 0x10, T.array8
+    format_array 0xff, T.array8
+  end
+
+  it "array 16" do
+    format_array 0x100, T.array16
+    format_array 0xffff, T.array16
+  end
+
+  it "array 32" do
+    format_array 0x10000, T.array32
+    # FIXME too late
+    # format_array 0xffffffff, T.array32
+  end
 
   it "nil" do
     format nil, T.nil, 1
