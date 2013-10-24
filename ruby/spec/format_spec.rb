@@ -73,73 +73,73 @@ describe AsciiPack do
     expect(AsciiPack.pack(1 / 0.0)).to eq(T.float64 + '7ff0000000000000')
     expect(AsciiPack.pack(-1 / 0.0)).to eq(T.float64 + 'fff0000000000000')
   end
-
-  it "fixstr" do
-    format "", T.fixstr_0, 1
-    format " ", T.fixstr_1, 2
-    format "あ", T.fixstr_1, 2
-    format "漢字", T.fixstr_2, 3
-    format " " * 0xe, T.fixstr_E, 15
-    format " " * 0xf, T.fixstr_F, 16
-  end
-
-  it "str 8" do
-    format "a" * 0x10, T.str8, 3 + 0x10
-    format "a" * 0xff, T.str8, 3 + 0xff
-  end
-
-  it "str 16" do
-    format "a" * 0x100, T.str16, 5 + 0x100
-    format "a" * 0xffff, T.str16, 5 + 0xffff
-  end
-
-  it "str 32" do
-    format "a" * 0x10000, T.str32, 9 + 0x10000
-    # FIXME too late
-    # format "a" * 0xffffffff, T.str32, 9 + 0xffffffff
-  end
-
-  it "map 4" do
-    format_map 0, T.map4
-    format_map 0xf, T.map4
-  end
-
-  it "map 8" do
-    format_map 0x10, T.map8
-    format_map 0xff, T.map8
-  end
-
-  it "map 16" do
-    format_map 0x100, T.map16
-    format_map 0xffff, T.map16
-  end
-
-  it "map 32" do
-    format_map 0x10000, T.map32
-    # FIXME too late
-    # format_map 0xffffffff, T.map32
-  end
-
-  it "array 4" do
-    format_array 0, T.array4
-    format_array 0xf, T.array4
-  end
-
-  it "array 8" do
-    format_array 0x10, T.array8
-    format_array 0xff, T.array8
-  end
-
-  it "array 16" do
-    format_array 0x100, T.array16
-    format_array 0xffff, T.array16
-  end
-
-  it "array 32" do
-    format_array 0x10000, T.array32
-    # FIXME too late
-    # format_array 0xffffffff, T.array32
-  end
+#
+#  it "fixstr" do
+#    format "", T.fixstr_0, 1
+#    format " ", T.fixstr_1, 2
+#    format "あ", T.fixstr_1, 2
+#    format "漢字", T.fixstr_2, 3
+#    format " " * 0xe, T.fixstr_E, 15
+#    format " " * 0xf, T.fixstr_F, 16
+#  end
+#
+#  it "str 8" do
+#    format "a" * 0x10, T.str8, 3 + 0x10
+#    format "a" * 0xff, T.str8, 3 + 0xff
+#  end
+#
+#  it "str 16" do
+#    format "a" * 0x100, T.str16, 5 + 0x100
+#    format "a" * 0xffff, T.str16, 5 + 0xffff
+#  end
+#
+#  it "str 32" do
+#    format "a" * 0x10000, T.str32, 9 + 0x10000
+#    # FIXME too late
+#    # format "a" * 0xffffffff, T.str32, 9 + 0xffffffff
+#  end
+#
+#  it "map 4" do
+#    format_map 0, T.map4
+#    format_map 0xf, T.map4
+#  end
+#
+#  it "map 8" do
+#    format_map 0x10, T.map8
+#    format_map 0xff, T.map8
+#  end
+#
+#  it "map 16" do
+#    format_map 0x100, T.map16
+#    format_map 0xffff, T.map16
+#  end
+#
+#  it "map 32" do
+#    format_map 0x10000, T.map32
+#    # FIXME too late
+#    # format_map 0xffffffff, T.map32
+#  end
+#
+#  it "array 4" do
+#    format_array 0, T.array4
+#    format_array 0xf, T.array4
+#  end
+#
+#  it "array 8" do
+#    format_array 0x10, T.array8
+#    format_array 0xff, T.array8
+#  end
+#
+#  it "array 16" do
+#    format_array 0x100, T.array16
+#    format_array 0xffff, T.array16
+#  end
+#
+#  it "array 32" do
+#    format_array 0x10000, T.array32
+#    # FIXME too late
+#    # format_array 0xffffffff, T.array32
+#  end
 
   it "nil" do
     format nil, T.nil, 1
