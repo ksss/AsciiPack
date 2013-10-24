@@ -8,7 +8,7 @@ require 'json'
 require 'msgpack'
 
 def count
-  100000
+  10000
 end
 
 puts "count:#{count}"
@@ -51,12 +51,12 @@ tt = Time.now
   "uint 64" => 0xffffffffffffffff,
   "int 4" => -1,
   "int 64" => -0x8000000000000000,
-  "fixstr" => "",
-  "str 8" => '0123456789abcdef',
   "float 64" => 1/3,
+  "fixstr" => "",
+  "str 32" => 'a' * 0x10000,
   "map 4" => {},
   "array 4" => [],
-  "array 8" => Array.new(16,0),
+  "array 8" => Array.new(16,'a'),
   "nil" => nil,
 }.each { |key, value|
   json_asciipack key, value

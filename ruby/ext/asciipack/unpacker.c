@@ -132,67 +132,90 @@ Unpacker_read (unpacker_t* ptr)
 		case 'a': // int 4
 			num = Unpacker_int(ptr, 1);
 			return INT2FIX(num);
+
 		case 'b': // int 8
 			num = Unpacker_int(ptr, 2);
 			return INT2FIX(num);
+
 		case 'c': // int 16
 			num = Unpacker_int(ptr, 4);
 			return INT2FIX(num);
+
 		case 'd': // int 32
 			num = Unpacker_int(ptr, 8);
 			return LONG2NUM(num);
+
 		case 'e': // int 64
 			num = Unpacker_int(ptr, 16);
 			return rb_ll2inum(num);
+
 		case 'g': // uint 8
 			num = Unpacker_uint(ptr, 2);
 			return INT2FIX(num);
+
 		case 'h': // uint 16
 			num = Unpacker_uint(ptr, 4);
 			return INT2FIX(num);
+
 		case 'i': // uint 32
 			num = Unpacker_uint(ptr, 8);
 			return LONG2NUM(num);
+
 		case 'j': // uint 64
 			num = Unpacker_uint(ptr, 16);
 			return rb_ull2inum(num);
+
 		case 'k': // float 32
 			return rb_float_new(Unpacker_float(ptr, 8));
+
 		case 'l': // float 64
 			return rb_float_new(Unpacker_float(ptr, 16));
-		case 'n':
+
+		case 'n': // str 8
 			num = Unpacker_uint(ptr, 2);
 			return Unpacker_str(ptr, num);
-		case 'o':
+
+		case 'o': // str 16
 			num = Unpacker_uint(ptr, 4);
 			return Unpacker_str(ptr, num);
-		case 'p':
+
+		case 'p': // str 32
 			num = Unpacker_uint(ptr, 8);
 			return Unpacker_str(ptr, num);
-		case 'r':
+
+		case 'r': // map 4
 			num = Unpacker_uint(ptr, 1);
 			return Unpacker_map(ptr, num);
-		case 's':
+
+		case 's': // map 8
 			num = Unpacker_uint(ptr, 2);
 			return Unpacker_map(ptr, num);
-		case 't':
+
+		case 't': // map16
 			num = Unpacker_uint(ptr, 4);
 			return Unpacker_map(ptr, num);
-		case 'u':
+
+		case 'u': // map 32
 			num = Unpacker_uint(ptr, 8);
 			return Unpacker_map(ptr, num);
-		case 'v':
+
+		case 'v': // array 4
 			num = Unpacker_uint(ptr, 1);
 			return Unpacker_array(ptr, num);
-		case 'w':
+
+		case 'w': // array 8
 			num = Unpacker_uint(ptr, 2);
 			return Unpacker_array(ptr, num);
-		case 'x':
+
+		case 'x': // array 16
 			num = Unpacker_uint(ptr, 4);
 			return Unpacker_array(ptr, num);
-		case 'y':
+
+		case 'y': // array 32
 			num = Unpacker_uint(ptr, 8);
 			return Unpacker_array(ptr, num);
+
+		// positive fixint
 		case '0': return INT2FIX(0);
 		case '1': return INT2FIX(1);
 		case '2': return INT2FIX(2);
@@ -209,6 +232,8 @@ Unpacker_read (unpacker_t* ptr)
 		case 'D': return INT2FIX(13);
 		case 'E': return INT2FIX(14);
 		case 'F': return INT2FIX(15);
+
+		// fixstr
 		case 'G':
 		case 'H':
 		case 'I':
@@ -227,10 +252,13 @@ Unpacker_read (unpacker_t* ptr)
 		case 'V':
 			num = *(ptr->ch - 1) - 'G';
 			return Unpacker_str(ptr, num);
+
+		// others
 		case 'W': return Qnil;
 		case 'X': return Qfalse;
 		case 'Y': return Qtrue;
 	}
+
 	rb_raise(rb_eArgError, "undefined type:%c", *(ptr->ch));
 	return Qnil;
 }
@@ -246,11 +274,11 @@ Unpacker_unpack (VALUE self)
 void
 Init_asciipack(void)
 {
-	VALUE mAsciiPack = rb_path2class("AsciiPack");
+	VALUE mAsciiPack = rb_const_get(rb_cObject, rb_intern("AsciiPack"));
 	VALUE cAsciiPack_Unpacker = rb_define_class_under(mAsciiPack, "Unpacker", rb_cObject);
 
 	rb_define_alloc_func(cAsciiPack_Unpacker, Unpacker_alloc);
 
-	rb_define_method(cAsciiPack_Unpacker, "unpack", Unpacker_unpack, 0);
 	rb_define_method(cAsciiPack_Unpacker, "initialize", Unpacker_initialize, -1);
+	rb_define_method(cAsciiPack_Unpacker, "unpack", Unpacker_unpack, 0);
 }

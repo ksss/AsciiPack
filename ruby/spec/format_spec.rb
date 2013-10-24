@@ -141,6 +141,15 @@ describe AsciiPack do
     # format_array 0xffffffff, T.array32
   end
 
+  it "recursive array" do
+    array = [0]
+    1000.times {
+      array = [array]
+    }
+    ap = AsciiPack.pack(array)
+    expect(AsciiPack.unpack(ap)).to eq(array)
+  end
+
   it "nil" do
     format nil, T.nil, 1
   end
