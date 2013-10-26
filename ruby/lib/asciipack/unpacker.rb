@@ -1,4 +1,4 @@
-module AsciiPack
+#module AsciiPack
 #  class Unpacker
 #    @@fixmap = {
 #      "0" => 0x0,
@@ -191,11 +191,11 @@ module AsciiPack
 #      cut(len)
 #    end
 #  end
-
-  class << self
-    def unpack (obj)
-      unpacker = Unpacker.new obj
-      unpacker.unpack
-    end
-  end
-end
+#
+#  class << self
+#    def unpack (obj)
+#      unpacker = Unpacker.new obj
+#      unpacker.unpack
+#    end
+#  end
+#end

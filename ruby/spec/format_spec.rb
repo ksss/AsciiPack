@@ -77,8 +77,8 @@ describe AsciiPack do
   it "fixstr" do
     format "", T.fixstr_0, 1
     format " ", T.fixstr_1, 2
-#    format "あ", T.fixstr_1, 2
-#    format "漢字", T.fixstr_2, 3
+    format "あ", T.fixstr_1, 2
+    format "漢字", T.fixstr_2, 3
     format " " * 0xe, T.fixstr_E, 15
     format " " * 0xf, T.fixstr_F, 16
   end

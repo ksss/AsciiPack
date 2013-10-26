@@ -39,5 +39,8 @@ union udouble {
 
 #include "ruby.h"
 
+extern VALUE cAsciiPack_Unpacker;
+void AsciiPack_Unpacker_init(VALUE mAsciiPack);
+
 #endif /* ifndef UNPACKER_H */
 

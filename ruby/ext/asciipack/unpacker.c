@@ -96,8 +96,24 @@ Unpacker_float (unpacker_t* ptr, size_t len)
 static VALUE
 Unpacker_str (unpacker_t* ptr, size_t len)
 {
-	VALUE str = rb_str_new(ptr->ch, len);
-	ptr->ch += len;
+	size_t n = len;
+	char* head = ptr->ch;
+
+	// too late...
+	while (n--) {
+		if ((*ptr->ch & 0x80) < 0x80) {
+			ptr->ch += 1;
+		} else if ((*ptr->ch & 0xff) < 0xc3) {
+			ptr->ch += 2;
+			len += 1;
+		} else {
+			ptr->ch += 3;
+			len += 2;
+		}
+	}
+
+	VALUE str = rb_str_new(head, len);
+	rb_funcall(str, rb_intern("force_encoding"), 1, rb_str_new2("utf-8"));
 	return str;
 }
 
@@ -105,8 +121,11 @@ static VALUE
 Unpacker_map (unpacker_t* ptr, size_t len)
 {
 	VALUE map = rb_hash_new();
+	VALUE key, value;
 	while (len--) {
-		rb_hash_aset(map, Unpacker_read(ptr), Unpacker_read(ptr));
+		key = Unpacker_read(ptr);
+		value = Unpacker_read(ptr);
+		rb_hash_aset(map, key, value);
 	}
 	return map;
 }
@@ -235,6 +254,7 @@ Unpacker_read (unpacker_t* ptr)
 
 		// fixstr
 		case 'G':
+			return rb_str_new2("");
 		case 'H':
 		case 'I':
 		case 'J':
@@ -267,18 +287,25 @@ static VALUE
 Unpacker_unpack (VALUE self)
 {
 	UNPACKER(self, ptr);
-
 	return Unpacker_read(ptr);
 }
 
-void
-Init_asciipack(void)
+static VALUE
+AsciiPack_unpack (int argc, VALUE *argv, VALUE self)
 {
-	VALUE mAsciiPack = rb_const_get(rb_cObject, rb_intern("AsciiPack"));
-	VALUE cAsciiPack_Unpacker = rb_define_class_under(mAsciiPack, "Unpacker", rb_cObject);
+	VALUE unpacker = rb_funcall(cAsciiPack_Unpacker, rb_intern("new"), 1, argv[0]);
+	return rb_funcall(unpacker, rb_intern("unpack"), 0);
+}
+
+void
+AsciiPack_Unpacker_init(VALUE mAsciiPack)
+{
+	cAsciiPack_Unpacker = rb_define_class_under(mAsciiPack, "Unpacker", rb_cObject);
 
 	rb_define_alloc_func(cAsciiPack_Unpacker, Unpacker_alloc);
 
 	rb_define_method(cAsciiPack_Unpacker, "initialize", Unpacker_initialize, -1);
 	rb_define_method(cAsciiPack_Unpacker, "unpack", Unpacker_unpack, 0);
+
+	rb_define_module_function(mAsciiPack, "unpack", AsciiPack_unpack, -1);
 }
