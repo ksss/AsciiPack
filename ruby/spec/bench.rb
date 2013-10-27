@@ -48,7 +48,6 @@ puts("|object|" + reports(0).keys.join("|") + "|")
 puts("|---|" + reports(0).keys.map{"---"}.join("|") + "|")
 
 map16 = {}
-a = '@'
 0x100.times {|i| map16[i.to_s] = 0 }
 
 tt = Time.now

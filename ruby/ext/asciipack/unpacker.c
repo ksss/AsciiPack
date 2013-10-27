@@ -56,8 +56,7 @@ to_i16all (unpacker_t* ptr, int len)
 {
 	uint64_t ret = 0;
 	while (len--) {
-		ret += to_i16(*ptr->ch);
-		ptr->ch++;
+		ret += to_i16(*ptr->ch++);
 		if (len != 0) ret = ret << 4;
 	}
 	return ret;
@@ -102,6 +101,7 @@ Unpacker_str (unpacker_t* ptr, size_t len)
 
 	VALUE str = rb_str_new(head, len);
 	rb_funcall(str, rb_intern("force_encoding"), 1, rb_str_new2("utf-8"));
+	ptr->ch += len;
 	return str;
 }
 
@@ -133,9 +133,7 @@ Unpacker_read (unpacker_t* ptr)
 {
 	uint64_t num;
 
-	ptr->ch++;
-
-	switch (*(ptr->ch - 1)) {
+	switch (*ptr->ch++) {
 		case 'a': // int 4
 			num = Unpacker_int(ptr, 1);
 			return INT2FIX(num);
@@ -267,7 +265,7 @@ Unpacker_read (unpacker_t* ptr)
 		case 'Y': return Qtrue;
 	}
 
-	rb_raise(rb_eArgError, "undefined type:%c", *(ptr->ch));
+	rb_raise(rb_eArgError, "undefined type:%c,data:%s,at:%ld", *(ptr->ch), ptr->buffer, ptr->ch - ptr->buffer);
 	return Qnil;
 }
 

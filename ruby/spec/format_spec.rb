@@ -4,7 +4,9 @@ require 'spec_helper'
 
 describe AsciiPack do
   it "intro" do
-    expect(AsciiPack.pack({"compact"=>true,"binary"=>0})).to eq('r2NcompactYMbinary0')
+    demo = {"compact"=>true,"binary"=>0}
+    expect(AsciiPack.pack(demo)).to eq('r2NcompactYMbinary0')
+    expect(AsciiPack.unpack('r2NcompactYMbinary0')).to eq(demo)
   end
 
   it "int 4" do
