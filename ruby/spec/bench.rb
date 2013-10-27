@@ -11,55 +11,66 @@ def count
   10000
 end
 
-puts "count:#{count}"
-def json_asciipack(name, obj)
+def reports (obj)
   obj = [obj]
   json = obj.to_json
   ap = AsciiPack.pack obj
   ms = Marshal.dump obj
   msg = MessagePack.pack obj
 
-  puts '[' + name + ']'
-  bench "AsciiPack.pack" do AsciiPack.pack obj end
-  bench "AsciiPack.unpack" do AsciiPack.unpack ap end
-  bench "JSON.generate" do obj.to_json end
-  bench "JSON.parse" do JSON.parse json end
-  bench "Marshal.dump" do Marshal.dump obj end
-  bench "Marshal.load" do Marshal.load ms end
-  bench "MessagePack.pack" do MessagePack.pack obj end
-  bench "MessagePack.unpack" do MessagePack.unpack msg end
-#  p({
-#    :ap => ap.length,
-#    :json => json.length,
-#    :marshal => ms.length,
-#    :msgpack => msg.length
-#  })
+  {
+    "AsciiPack.pack" => lambda { AsciiPack.pack obj },
+    "AsciiPack.unpack" => lambda { AsciiPack.unpack ap },
+    "MessagePack.pack" => lambda { MessagePack.pack obj },
+    "MessagePack.unpack" => lambda { MessagePack.unpack msg },
+    "JSON.generate" => lambda { obj.to_json },
+    "JSON.parse" => lambda { JSON.parse json },
+    "Marshal.dump" => lambda { Marshal.dump obj },
+    "Marshal.load" => lambda { Marshal.load ms },
+  }
 end
 
-def bench(name)
-  t = Time.now
-  count.times {
-    yield
+def json_asciipack(name, obj)
+  print("|" + name + "|")
+
+  results = []
+  reports(obj).each { |_, func|
+    t = Time.now
+    count.times {
+      func.call
+    }
+    results << "%.1f" % ((Time.now - t) * 1000)
   }
-  puts name + ': ' + (Time.now - t).to_s + 's'
+  puts results.join("|") + "|"
 end
+
+puts("|object|" + reports(0).keys.join("|") + "|")
+puts("|---|" + reports(0).keys.map{"---"}.join("|") + "|")
+
+map16 = {}
+a = '@'
+0x100.times {|i| map16[i.to_s] = 0 }
 
 tt = Time.now
 {
   "positive fixint" => 0,
-  "uint 4" => 16,
   "uint 64" => 0xffffffffffffffff,
   "int 4" => -1,
   "int 64" => -0x8000000000000000,
   "float 64" => 1/3,
-  "fixstr" => "",
+  "fixstr" => "a",
   "str 32" => 'a' * 0x10000,
   "map 4" => {},
+  "map 16" => map16,
   "array 4" => [],
-  "array 8" => Array.new(16,'a'),
+  "array 16" => Array.new(0x100,0),
   "nil" => nil,
 }.each { |key, value|
   json_asciipack key, value
 }
 
-p 'total: ' + (Time.now - tt).to_s + 's'
+puts "\n"
+puts "count:#{count}"
+puts "unit:/ms"
+puts 'total:' + (Time.now - tt).to_s + 's'
+

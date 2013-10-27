@@ -9,6 +9,7 @@
 struct packer {
 	char* buffer;
 	char* ch;
+	size_t memsize;
 };
 typedef struct packer packer_t;
 
@@ -20,6 +21,8 @@ union unegative_int {
 	int32_t i32;
 	int64_t i64;
 };
+
+#define MEMSIZE_INIT 128
 
 #define PACKER(from, name) \
 	packer_t* name; \

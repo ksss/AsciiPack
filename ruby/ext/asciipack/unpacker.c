@@ -87,30 +87,18 @@ static double
 Unpacker_float (unpacker_t* ptr, size_t len)
 {
 	uint64_t ret = to_i16all(ptr, len);
-	union udouble converter;
-
-	converter.u = ret;
+	/* for convert unsigned long <-> float */
+	union {
+		unsigned long u;
+		double f64;
+	} converter = {ret};
 	return converter.f64;
 }
 
 static VALUE
 Unpacker_str (unpacker_t* ptr, size_t len)
 {
-	size_t n = len;
 	char* head = ptr->ch;
-
-	// too late...
-	while (n--) {
-		if ((*ptr->ch & 0x80) < 0x80) {
-			ptr->ch += 1;
-		} else if ((*ptr->ch & 0xff) < 0xc3) {
-			ptr->ch += 2;
-			len += 1;
-		} else {
-			ptr->ch += 3;
-			len += 2;
-		}
-	}
 
 	VALUE str = rb_str_new(head, len);
 	rb_funcall(str, rb_intern("force_encoding"), 1, rb_str_new2("utf-8"));
