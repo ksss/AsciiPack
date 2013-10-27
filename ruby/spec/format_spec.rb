@@ -70,6 +70,7 @@ describe AsciiPack do
     check_each_other(1.0000000000000004, T.float64 + '3ff0000000000002')
     check_each_other(1/3.0, T.float64 + '3fd5555555555555')
     expect(AsciiPack.pack(Float::NAN)).to eq(T.float64 + '7ff8000000000000')
+    expect(AsciiPack.unpack(T.float64 + '7ff8000000000000').nan?).to be true
     check_each_other(1 / 0.0, T.float64 + '7ff0000000000000')
     check_each_other(-1 / 0.0, T.float64 + 'fff0000000000000')
   end
@@ -89,10 +90,8 @@ describe AsciiPack do
   end
 
   it "str 16" do
-    100.times {
     format "a" * 0x100, T.str16, 5 + 0x100
     format "a" * 0xffff, T.str16, 5 + 0xffff
-    }
   end
 
   it "str 32" do
@@ -148,8 +147,7 @@ describe AsciiPack do
     1000.times {
       array = [array]
     }
-    ap = AsciiPack.pack(array)
-    expect(AsciiPack.unpack(ap)).to eq(array)
+    check_each_other(array, AsciiPack.pack(array))
   end
 
   it "nil" do
