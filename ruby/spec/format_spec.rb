@@ -64,21 +64,21 @@ describe AsciiPack do
     format 1.0, T.float64, 17
     format 0.1, T.float64, 17
     format -0.1, T.float64, 17
-    expect(AsciiPack.pack(-0.1)).to eq(T.float64 + 'bfb999999999999a')
-    expect(AsciiPack.pack(1.0)).to eq(T.float64 + '3ff0000000000000')
-    expect(AsciiPack.pack(1.0000000000000002)).to eq(T.float64 + '3ff0000000000001')
-    expect(AsciiPack.pack(1.0000000000000004)).to eq(T.float64 + '3ff0000000000002')
-    expect(AsciiPack.pack(1/3.0)).to eq(T.float64 + '3fd5555555555555')
-    expect(AsciiPack.pack(Float::NAN)).to eq(T.float64 + '7fffffffffffffff')
-    expect(AsciiPack.pack(1 / 0.0)).to eq(T.float64 + '7ff0000000000000')
-    expect(AsciiPack.pack(-1 / 0.0)).to eq(T.float64 + 'fff0000000000000')
+    check_each_other(-0.1, T.float64 + 'bfb999999999999a')
+    check_each_other(1.0, T.float64 + '3ff0000000000000')
+    check_each_other(1.0000000000000002, T.float64 + '3ff0000000000001')
+    check_each_other(1.0000000000000004, T.float64 + '3ff0000000000002')
+    check_each_other(1/3.0, T.float64 + '3fd5555555555555')
+    expect(AsciiPack.pack(Float::NAN)).to eq(T.float64 + '7ff8000000000000')
+    check_each_other(1 / 0.0, T.float64 + '7ff0000000000000')
+    check_each_other(-1 / 0.0, T.float64 + 'fff0000000000000')
   end
 
   it "fixstr" do
     format "", T.fixstr_0, 1
     format " ", T.fixstr_1, 2
-    format "あ", T.fixstr_1, 2
-    format "漢字", T.fixstr_2, 3
+    format "あ", T.fixstr_3, 4
+    format "漢字", T.fixstr_6, 7
     format " " * 0xe, T.fixstr_E, 15
     format " " * 0xf, T.fixstr_F, 16
   end
@@ -89,8 +89,10 @@ describe AsciiPack do
   end
 
   it "str 16" do
+    100.times {
     format "a" * 0x100, T.str16, 5 + 0x100
     format "a" * 0xffff, T.str16, 5 + 0xffff
+    }
   end
 
   it "str 32" do
@@ -141,6 +143,15 @@ describe AsciiPack do
     # format_array 0xffffffff, T.array32
   end
 
+  it "recursive array" do
+    array = [0]
+    1000.times {
+      array = [array]
+    }
+    ap = AsciiPack.pack(array)
+    expect(AsciiPack.unpack(ap)).to eq(array)
+  end
+
   it "nil" do
     format nil, T.nil, 1
   end
@@ -158,6 +169,11 @@ def format (object, first, length)
   ap = AsciiPack.pack(object)
   expect(ap[0]).to eq(first)
   expect(ap.length).to eq(length)
+  expect(AsciiPack.unpack(ap)).to eq(object)
+end
+
+def check_each_other (object, ap)
+  expect(AsciiPack.pack(object)).to eq(ap)
   expect(AsciiPack.unpack(ap)).to eq(object)
 end
 
