@@ -25,6 +25,10 @@ Unpacker_init(VALUE self, VALUE obj, int argc, VALUE *argv, VALUE size)
 		rb_raise(rb_eArgError, "unallocated unpacker");
 	}
 
+	if (rb_type(obj) != T_STRING) {
+		rb_raise(rb_eArgError, "can not unpack object");
+	}
+
 	ptr->buffer = RSTRING_PTR(obj);
 	ptr->ch = ptr->buffer;
 
