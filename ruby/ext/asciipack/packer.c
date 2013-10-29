@@ -46,18 +46,12 @@ Packer_realloc (packer_t* ptr, size_t require)
 	size_t newsize = ptr->memsize;
 	size_t len = ptr->ch - ptr->buffer;
 	size_t require_size = require + len;
-	char* mem = NULL;
-	char* p;
 
 	while (newsize < require_size) {
 		newsize *= 2;
 	}
 
-	mem = realloc(ptr->buffer, newsize);
-	if (mem == NULL) {
-		return NULL;
-	}
-	ptr->buffer = mem;
+	ptr->buffer = realloc(ptr->buffer, sizeof(char) * newsize);
 	ptr->ch = ptr->buffer + len;
 	ptr->memsize = newsize;
 	return ptr->buffer;
@@ -258,7 +252,7 @@ Packer_float (packer_t* ptr, VALUE floatnum)
 		uint64_t u64;
 	} converter = {float64};
 
-	Packer_check(ptr, 9);
+	Packer_check(ptr, 17);
 	Packer_write_buffer_1(ptr, 'l');
 	Packer_write_uint64(ptr, converter.u64);
 }
@@ -268,21 +262,20 @@ Packer_str (packer_t* ptr, VALUE string)
 {
 	uint32_t len = RSTRING_LEN(string);
 	char* p = RSTRING_PTR(string);
-	uint8_t n = 0;
 
 	if (len < 0x10) {
 		Packer_check(ptr, 1);
 		Packer_write_buffer_1(ptr, 'G' + len);
 	} else if (len < 0x100) {
-		Packer_check(ptr, 1);
+		Packer_check(ptr, 3);
 		Packer_write_buffer_1(ptr, 'n');
 		Packer_write_positive_num(ptr, len, 2);
 	} else if (len < 0x10000) {
-		Packer_check(ptr, 1);
+		Packer_check(ptr, 5);
 		Packer_write_buffer_1(ptr, 'o');
 		Packer_write_positive_num(ptr, len, 4);
 	} else {
-		Packer_check(ptr, 1);
+		Packer_check(ptr, 9);
 		Packer_write_buffer_1(ptr, 'p');
 		Packer_write_positive_num(ptr, len, 8);
 	}
@@ -336,7 +329,6 @@ static void
 Packer_map (packer_t* ptr, VALUE hash)
 {
 	uint32_t len = RHASH_SIZE(hash);
-	uint32_t i = 0;
 
 	if (len < 0x10) {
 		Packer_check(ptr, 2);
@@ -363,12 +355,14 @@ Packer_map (packer_t* ptr, VALUE hash)
 static VALUE
 Packer_pack (VALUE self, VALUE obj)
 {
+	VALUE str;
+
 	PACKER(self, ptr);
 
 	Packer_write(ptr, obj);
 
 	*ptr->ch = '\0';
-	VALUE str = rb_str_new2(ptr->buffer);
+	str = rb_str_new(ptr->buffer, ptr->ch - ptr->buffer);
 	free(ptr->buffer);
 	return str;
 }
