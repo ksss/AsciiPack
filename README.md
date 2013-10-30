@@ -2,7 +2,7 @@
 
 AsciiPack is an object serialization inspired by MessagePack.
 
-AsciiPack is use easy by Web. because all serialize object is only writed ascii strings.
+AsciiPack is use easy by Web. because all serialize object is only writed by ascii strings.
 
     JSON is 27 chars:
     {"compact":true,"binary":0}

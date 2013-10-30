@@ -2,6 +2,10 @@
 
 [![Gem Version](https://badge.fury.io/rb/asciipack.png)](http://badge.fury.io/rb/asciipack)
 
+AsciiPack is an object serialization inspired by MessagePack.
+
+AsciiPack is use easy by Web. because all serialize object is only writed by ascii strings.
+
 ## Synopsis
 
 ```ruby

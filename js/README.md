@@ -2,6 +2,10 @@
 
 [![NPM version](https://badge.fury.io/js/asciipack.png)](http://badge.fury.io/js/asciipack)
 
+AsciiPack is an object serialization inspired by MessagePack.
+
+AsciiPack is use easy by Web. because all serialize object is only writed by ascii strings.
+
 ## Synopsis
 
 ```javascript
@@ -15,12 +19,14 @@ console.log(unpacked); //=> {"compact":true,"binary":0}
 
 ## Install
 
-```
-<script src="https://raw.github.com/ksss/AsciiPack/master/js/asciipack.js"></script>
-```
+AsciiPack can use node and web.
 
 ```
 npm install asciipack
+```
+
+```html
+<script src="asciipack.js"></script>
 ```
 
 see also [https://github.com/ksss/AsciiPack/blob/master/README.md](https://github.com/ksss/AsciiPack/blob/master/README.md)
