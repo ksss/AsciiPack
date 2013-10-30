@@ -17,6 +17,15 @@ Packer_alloc(VALUE klass)
 	return Data_Wrap_Struct(klass, packer_mark, -1, ptr);
 }
 
+static void
+Packer_init(packer_t* ptr)
+{
+	// TODO fix memory control
+	ptr->buffer = (char*) malloc(sizeof(char) * MEMSIZE_INIT);
+	ptr->ch = ptr->buffer;
+	ptr->memsize = MEMSIZE_INIT;
+}
+
 static VALUE
 Packer_initialize(int argc, VALUE *argv, VALUE self)
 {
@@ -26,11 +35,7 @@ Packer_initialize(int argc, VALUE *argv, VALUE self)
 		rb_raise(rb_eArgError, "unallocated packer");
 	}
 
-	// TODO fix memory control
-	ptr->buffer = (char*) malloc(sizeof(char) * MEMSIZE_INIT);
-	ptr->ch = ptr->buffer;
-	ptr->memsize = MEMSIZE_INIT;
-
+	Packer_init(ptr);
 	return self;
 }
 
@@ -258,11 +263,8 @@ Packer_float (packer_t* ptr, VALUE floatnum)
 }
 
 static void
-Packer_str (packer_t* ptr, VALUE string)
+Packer_write_string (packer_t* ptr, uint32_t len)
 {
-	uint32_t len = RSTRING_LEN(string);
-	char* p = RSTRING_PTR(string);
-
 	if (len < 0x10) {
 		Packer_check(ptr, 1);
 		Packer_write_buffer_1(ptr, 'G' + len);
@@ -279,6 +281,29 @@ Packer_str (packer_t* ptr, VALUE string)
 		Packer_write_buffer_1(ptr, 'p');
 		Packer_write_positive_num(ptr, len, 8);
 	}
+}
+
+static void
+Packer_str (packer_t* ptr, VALUE string)
+{
+	uint32_t len = RSTRING_LEN(string);
+	const char* p = RSTRING_PTR(string);
+
+	Packer_write_string(ptr, len);
+
+	Packer_check(ptr, len);
+	while (len--) {
+		Packer_write_buffer_1(ptr, *p++);
+	}
+}
+
+static void
+Packer_symbol (packer_t* ptr, VALUE symbol)
+{
+	const char* p = rb_id2name(SYM2ID(symbol));
+	uint32_t len = strlen(p);
+
+	Packer_write_string(ptr, len);
 
 	Packer_check(ptr, len);
 	while (len--) {
@@ -351,20 +376,26 @@ Packer_map (packer_t* ptr, VALUE hash)
 	rb_hash_foreach(hash, Packer_write_hash_each, (VALUE) ptr);
 }
 
-
 static VALUE
-Packer_pack (VALUE self, VALUE obj)
+Packer_finish (packer_t* ptr)
 {
 	VALUE str;
-
-	PACKER(self, ptr);
-
-	Packer_write(ptr, obj);
 
 	*ptr->ch = '\0';
 	str = rb_str_new(ptr->buffer, ptr->ch - ptr->buffer);
 	free(ptr->buffer);
+
 	return str;
+}
+
+static VALUE
+Packer_pack (VALUE self, VALUE obj)
+{
+	PACKER(self, ptr);
+
+	Packer_write(ptr, obj);
+
+	return Packer_finish(ptr);
 }
 
 static void
@@ -410,6 +441,9 @@ Packer_write (packer_t* ptr, VALUE obj)
 	case T_FLOAT:
 		Packer_float(ptr, obj);
 		break;
+	case T_SYMBOL:
+		Packer_symbol(ptr, obj);
+		break;
 	case T_STRING:
 		Packer_str(ptr, obj);
 		break;
@@ -429,6 +463,30 @@ AsciiPack_pack (int argc, VALUE *argv, VALUE self)
 	return rb_funcall(packer, rb_intern("pack"), 1, argv[0]);
 }
 
+VALUE MessagePack_pack (int argc, VALUE* argv)
+{
+	VALUE v = argv[0];
+	VALUE self = Packer_alloc(cAsciiPack_Packer);
+	VALUE str;
+
+	PACKER(self, ptr);
+
+	if (!ptr) {
+		rb_raise(rb_eArgError, "unallocated packer");
+	}
+
+	Packer_init(ptr);
+
+	Packer_write(ptr, v);
+
+	return Packer_finish(ptr);
+}
+
+static VALUE AsciiPack_to_asciipack (int argc, VALUE* argv, VALUE self)
+{
+	return MessagePack_pack(1, &self);
+}
+
 void
 AsciiPack_Packer_init(VALUE mAsciiPack)
 {
@@ -439,4 +497,14 @@ AsciiPack_Packer_init(VALUE mAsciiPack)
 	rb_define_method(cAsciiPack_Packer, "pack", Packer_pack, 1);
 
 	rb_define_module_function(mAsciiPack, "pack", AsciiPack_pack, -1);
+	rb_define_method(rb_cFixnum, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cBignum, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cFloat, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cString, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cSymbol, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cHash, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cArray, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cNilClass, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cFalseClass, "to_asciipack", AsciiPack_to_asciipack, -1);
+	rb_define_method(rb_cTrueClass, "to_asciipack", AsciiPack_to_asciipack, -1);
 }

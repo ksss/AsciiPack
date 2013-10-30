@@ -12,6 +12,7 @@ describe AsciiPack do
   it "int 4" do
     format -1, T.int4, 2
     format -8, T.int4, 2
+    expect(-1.to_asciipack).to eq(T.int4 + 'f')
   end
 
   it "int 8" do
@@ -39,6 +40,7 @@ describe AsciiPack do
     format 0x1, T.positive_fixint_1, 1
     format 0xe, T.positive_fixint_E, 1
     format 0xf, T.positive_fixint_F, 1
+    expect(0.to_asciipack).to eq(T.positive_fixint_0)
   end
 
   it "uint 8" do
@@ -59,6 +61,7 @@ describe AsciiPack do
   it "uint 64" do
     format 0x100000000,        T.uint64, 17
     format 0xffffffffffffffff, T.uint64, 17
+    expect(0xffffffffffffffff.to_asciipack).to eq(T.uint64 + 'ffffffffffffffff')
   end
 
   it "float 64" do
@@ -75,6 +78,7 @@ describe AsciiPack do
     expect(AsciiPack.unpack(T.float64 + '7ff8000000000000').nan?).to be true
     check_each_other(1 / 0.0, T.float64 + '7ff0000000000000')
     check_each_other(-1 / 0.0, T.float64 + 'fff0000000000000')
+    expect(1.0.to_asciipack).to eq(T.float64 + '3ff0000000000000')
   end
 
   it "fixstr" do
@@ -84,6 +88,7 @@ describe AsciiPack do
     format "漢字", T.fixstr_6, 7
     format " " * 0xe, T.fixstr_E, 15
     format " " * 0xf, T.fixstr_F, 16
+    expect("".to_asciipack).to eq(T.fixstr_0)
   end
 
   it "str 8" do
@@ -102,9 +107,14 @@ describe AsciiPack do
     # format "a" * 0xffffffff, T.str32, 9 + 0xffffffff
   end
 
+  it "symbol is converted to str" do
+    expect(:sym.to_asciipack).to eq(T.fixstr_3 + 'sym')
+  end
+
   it "map 4" do
     format_map 0, T.map4
     format_map 0xf, T.map4
+    expect({}.to_asciipack).to eq(T.map4 + '0')
   end
 
   it "map 8" do
@@ -126,6 +136,7 @@ describe AsciiPack do
   it "array 4" do
     format_array 0, T.array4
     format_array 0xf, T.array4
+    expect([].to_asciipack).to eq(T.array4 + '0')
   end
 
   it "array 8" do
@@ -154,14 +165,17 @@ describe AsciiPack do
 
   it "nil" do
     format nil, T.nil, 1
+    expect(nil.to_asciipack).to eq(T.nil)
   end
 
   it "false" do
     format false, T.false, 1
+    expect(false.to_asciipack).to eq(T.false)
   end
 
   it "true" do
     format true, T.true, 1
+    expect(true.to_asciipack).to eq(T.true)
   end
 end
 
