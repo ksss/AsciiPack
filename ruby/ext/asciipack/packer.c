@@ -457,17 +457,10 @@ Packer_write (packer_t* ptr, VALUE obj)
 }
 
 static VALUE
-AsciiPack_pack (int argc, VALUE *argv, VALUE self)
-{
-	VALUE packer = rb_funcall(cAsciiPack_Packer, rb_intern("new"), 0);
-	return rb_funcall(packer, rb_intern("pack"), 1, argv[0]);
-}
-
-VALUE MessagePack_pack (int argc, VALUE* argv)
+AsciiPack_pack (int argc, VALUE* argv)
 {
 	VALUE v = argv[0];
 	VALUE self = Packer_alloc(cAsciiPack_Packer);
-	VALUE str;
 
 	PACKER(self, ptr);
 
@@ -484,7 +477,7 @@ VALUE MessagePack_pack (int argc, VALUE* argv)
 
 static VALUE AsciiPack_to_asciipack (int argc, VALUE* argv, VALUE self)
 {
-	return MessagePack_pack(1, &self);
+	return AsciiPack_pack(1, &self);
 }
 
 void
