@@ -67,7 +67,7 @@ Packer_check (packer_t* ptr, size_t require)
 {
 	if (Packer_buffer_rest_size(ptr) < require) {
 		if (Packer_realloc(ptr, require) == NULL) {
-			// raise!
+			rb_raise(rb_eNoMemError, "Packer can not realloc.(size=%ld)", ptr->memsize);
 		}
 	}
 }
