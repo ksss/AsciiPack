@@ -89,6 +89,35 @@ Packer_write_positive_num_1 (packer_t* ptr, unsigned int word)
 }
 
 static void
+Packer_write_uint8 (packer_t* ptr, uint8_t n)
+{
+	Packer_write_positive_num_1(ptr, (n & 0xf0) >> 4);
+	Packer_write_positive_num_1(ptr, n & 0x0f);
+}
+
+static void
+Packer_write_uint16 (packer_t* ptr, uint16_t n)
+{
+	Packer_write_positive_num_1(ptr, (n & 0xf000) >> 12);
+	Packer_write_positive_num_1(ptr, (n & 0x0f00) >> 8);
+	Packer_write_positive_num_1(ptr, (n & 0x00f0) >> 4);
+	Packer_write_positive_num_1(ptr, n & 0x000f);
+}
+
+static void
+Packer_write_uint32 (packer_t* ptr, uint32_t n)
+{
+	Packer_write_positive_num_1(ptr, (n & 0xf0000000LL) >> 28);
+	Packer_write_positive_num_1(ptr, (n & 0x0f000000LL) >> 24);
+	Packer_write_positive_num_1(ptr, (n & 0x00f00000LL) >> 20);
+	Packer_write_positive_num_1(ptr, (n & 0x000f0000LL) >> 16);
+	Packer_write_positive_num_1(ptr, (n & 0x0000f000LL) >> 12);
+	Packer_write_positive_num_1(ptr, (n & 0x00000f00LL) >> 8);
+	Packer_write_positive_num_1(ptr, (n & 0x000000f0LL) >> 4);
+	Packer_write_positive_num_1(ptr, (n & 0x0000000fLL));
+}
+
+static void
 Packer_write_uint64 (packer_t* ptr, uint64_t n)
 {
 	Packer_write_positive_num_1(ptr, (n & 0xf000000000000000LL) >> 60);
@@ -131,26 +160,15 @@ Packer_write_positive_num (packer_t* ptr, uint64_t n, unsigned int bytesize)
 		break;
 
 	case 2:
-		Packer_write_positive_num_1(ptr, (n & 0xf0) >> 4);
-		Packer_write_positive_num_1(ptr, n & 0x0f);
+		Packer_write_uint8(ptr, n);
 		break;
 
 	case 4:
-		Packer_write_positive_num_1(ptr, (n & 0xf000) >> 12);
-		Packer_write_positive_num_1(ptr, (n & 0x0f00) >> 8);
-		Packer_write_positive_num_1(ptr, (n & 0x00f0) >> 4);
-		Packer_write_positive_num_1(ptr, n & 0x000f);
+		Packer_write_uint16(ptr, n);
 		break;
 
 	case 8:
-		Packer_write_positive_num_1(ptr, (n & 0xf0000000LL) >> 28);
-		Packer_write_positive_num_1(ptr, (n & 0x0f000000LL) >> 24);
-		Packer_write_positive_num_1(ptr, (n & 0x00f00000LL) >> 20);
-		Packer_write_positive_num_1(ptr, (n & 0x000f0000LL) >> 16);
-		Packer_write_positive_num_1(ptr, (n & 0x0000f000LL) >> 12);
-		Packer_write_positive_num_1(ptr, (n & 0x00000f00LL) >> 8);
-		Packer_write_positive_num_1(ptr, (n & 0x000000f0LL) >> 4);
-		Packer_write_positive_num_1(ptr, (n & 0x0000000fLL));
+		Packer_write_uint32(ptr, n);
 		break;
 
 	case 16:
@@ -490,6 +508,7 @@ AsciiPack_Packer_init(VALUE mAsciiPack)
 	rb_define_method(cAsciiPack_Packer, "pack", Packer_pack, 1);
 
 	rb_define_module_function(mAsciiPack, "pack", AsciiPack_pack, -1);
+
 	rb_define_method(rb_cFixnum, "to_asciipack", AsciiPack_to_asciipack, -1);
 	rb_define_method(rb_cBignum, "to_asciipack", AsciiPack_to_asciipack, -1);
 	rb_define_method(rb_cFloat, "to_asciipack", AsciiPack_to_asciipack, -1);
