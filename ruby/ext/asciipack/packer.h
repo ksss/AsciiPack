@@ -6,9 +6,14 @@
 
 #include <stdlib.h>
 
+struct buffer {
+	char* mem;
+	char* seek;
+};
+typedef struct buffer buffer_t;
+
 struct packer {
-	char* buffer;
-	char* ch;
+	buffer_t buffer;
 	size_t memsize;
 };
 typedef struct packer packer_t;
@@ -30,6 +35,8 @@ union unegative_int {
 	if (name == NULL) { \
 		rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be.'"); \
 	}
+
+#define PACKER_BUFFER(p) (&(p)->buffer)
 
 #include "ruby.h"
 
