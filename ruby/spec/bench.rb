@@ -8,11 +8,11 @@ require 'json'
 require 'msgpack'
 
 def count
-  10000
+  1
 end
 
 def reports (obj)
-  obj = [obj]
+  obj = [obj] * 100
   json = obj.to_json
   ap = AsciiPack.pack obj
   ms = Marshal.dump obj
@@ -58,7 +58,8 @@ tt = Time.now
   "int 64" => -0x8000000000000000,
   "float 64" => 1/3,
   "fixstr" => "a",
-  "str 32" => 'a' * 0x10000,
+  "str (1KB)" => 'a' * 1024,
+  "str (1MB)" => 'a' * 1024*1024,
   "map 4" => {},
   "map 16" => map16,
   "array 4" => [],

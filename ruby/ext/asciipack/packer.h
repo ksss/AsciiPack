@@ -16,7 +16,7 @@ typedef struct buffer buffer_t;
 struct packer {
 	char* mem;
 	char* seek;
-	buffer_t buffer;
+	buffer_t* buffer;
 	buffer_t* start;
 	size_t memsize;
 };
@@ -31,7 +31,7 @@ union unegative_int {
 	int64_t i64;
 };
 
-#define MEMSIZE_INIT 128
+#define MEMSIZE_INIT (1024)
 
 #define PACKER(from, name) \
 	packer_t* name; \
@@ -40,7 +40,7 @@ union unegative_int {
 		rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be.'"); \
 	}
 
-#define PACKER_BUFFER(p) (&(p)->buffer)
+#define PACKER_BUFFER(p) ((p)->buffer)
 
 #include "ruby.h"
 
