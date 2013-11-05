@@ -7,13 +7,17 @@
 #include <stdlib.h>
 
 struct buffer {
-	char* mem;
-	char* seek;
+	char* begin;
+	char* end;
+	struct buffer* next;
 };
 typedef struct buffer buffer_t;
 
 struct packer {
+	char* mem;
+	char* seek;
 	buffer_t buffer;
+	buffer_t* start;
 	size_t memsize;
 };
 typedef struct packer packer_t;
