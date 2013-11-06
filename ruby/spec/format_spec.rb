@@ -73,7 +73,7 @@ describe AsciiPack do
     check_each_other(1.0, T.float64 + '3ff0000000000000')
     check_each_other(1.0000000000000002, T.float64 + '3ff0000000000001')
     check_each_other(1.0000000000000004, T.float64 + '3ff0000000000002')
-    check_each_other(1/3.0, T.float64 + '3fd5555555555555')
+    check_each_other(1.0/3.0, T.float64 + '3fd5555555555555')
     expect(AsciiPack.pack(Float::NAN)).to eq(T.float64 + '7ff8000000000000')
     expect(AsciiPack.unpack(T.float64 + '7ff8000000000000').nan?).to be true
     check_each_other(1 / 0.0, T.float64 + '7ff0000000000000')

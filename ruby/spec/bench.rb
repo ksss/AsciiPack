@@ -13,7 +13,7 @@ def count
 end
 
 def reports (obj)
-  obj =[obj] * 10
+  obj =[obj] * 1
   json = obj.to_json
   ap = AsciiPack.pack obj
   ms = Marshal.dump obj
@@ -46,14 +46,14 @@ def json_asciipack(name, obj)
 end
 
 puts("|object|" + reports(0).keys.join("|") + "|")
-puts("|---|" + reports(0).keys.map{"---"}.join("|") + "|")
+puts("|---|" + reports(0).keys.map{"---:"}.join("|") + "|")
 
 map16 = {}
 0x10000.times {|i| map16[i.to_s] = 0 }
 
 tt = Time.now
 {
-  "float 64" => [1/3] * 100,
+  "float 64" => [1.0/3.0] * 100,
   "str (1KB)" => ['a' * 1024],
   "str (1MB)" => ['a' * 1024*1024],
   "str (100MB)" => ['a' * 100*1024*1024],

@@ -4,7 +4,7 @@ require 'spec_helper'
 
 describe "AsciiPack:memory" do
   it "packer:num" do
-    check([1,1.1,-1.1,1/3,0xffffffffffffffff,-0x8000000000000000,0,Float::INFINITY] * 3)
+    check([1,1.1,-1.1,1.0/3.0,0xffffffffffffffff,-0x8000000000000000,0,Float::INFINITY] * 3)
   end
 
   it "packer:str" do
