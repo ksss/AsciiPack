@@ -12,8 +12,8 @@ Packer_mark (packer_t* ptr)
 static void
 Packer_free (packer_t* ptr)
 {
-	buffer_t* b = ptr->start;
-	buffer_t* next;
+	tag_t* b = ptr->start;
+	tag_t* next;
 
 	while (b != NULL) {
 		next = b->next;
@@ -33,18 +33,18 @@ Packer_alloc (VALUE klass)
 static void
 Packer_init (packer_t* ptr)
 {
-	buffer_t* buffer = (buffer_t*) malloc(sizeof(buffer_t));
+	tag_t* tag = (tag_t*) malloc(sizeof(tag_t));
 	char* mem = (char*) malloc(sizeof(char) * MEMSIZE_INIT);
 
 	ptr->mem = mem;
 	ptr->mem_end = mem;
 	ptr->memsize = MEMSIZE_INIT;
-	ptr->start = buffer;
-	ptr->buffer = ptr->start;
-	ptr->buffer->begin = mem;
-	ptr->buffer->end = mem;
-	ptr->buffer->is_reference = 0;
-	ptr->buffer->next = NULL;
+	ptr->start = tag;
+	ptr->tag = ptr->start;
+	ptr->tag->begin = mem;
+	ptr->tag->end = mem;
+	ptr->tag->is_reference = 0;
+	ptr->tag->next = NULL;
 }
 
 static VALUE
@@ -61,25 +61,25 @@ Packer_initialize (int argc, VALUE *argv, VALUE self)
 }
 
 static size_t
-Packer_buffer_writed_size (packer_t* ptr)
+Packer_tag_writed_size (packer_t* ptr)
 {
-	return ptr->buffer->end - ptr->mem;
+	return ptr->tag->end - ptr->mem;
 }
 
 static size_t
-Packer_buffer_rest_size (packer_t* ptr)
+Packer_tag_rest_size (packer_t* ptr)
 {
-	return ptr->memsize - Packer_buffer_writed_size(ptr);
+	return ptr->memsize - Packer_tag_writed_size(ptr);
 }
 
 static char*
 Packer_realloc (packer_t* ptr, size_t require)
 {
 	size_t newsize = ptr->memsize;
-	size_t len = Packer_buffer_writed_size(ptr);
+	size_t len = Packer_tag_writed_size(ptr);
 	size_t require_size = require + len;
 	char* mem;
-	buffer_t* b = ptr->start;
+	tag_t* b = ptr->start;
 
 	while (newsize < require_size) {
 		newsize *= 2;
@@ -110,18 +110,18 @@ Packer_realloc (packer_t* ptr, size_t require)
 static void
 Packer_check (packer_t* ptr, size_t require)
 {
-	if (ptr->buffer->is_reference) {
-		buffer_t* buffer_mem = (buffer_t*) malloc(sizeof(buffer_t));
+	if (ptr->tag->is_reference) {
+		tag_t* tag_mem = (tag_t*) malloc(sizeof(tag_t));
 
-		ptr->buffer->next = buffer_mem;
+		ptr->tag->next = tag_mem;
 
-		buffer_mem->begin = ptr->mem_end;
-		buffer_mem->end = ptr->mem_end;
-		buffer_mem->next = NULL;
-		buffer_mem->is_reference = 0;
-		ptr->buffer = buffer_mem;
+		tag_mem->begin = ptr->mem_end;
+		tag_mem->end = ptr->mem_end;
+		tag_mem->next = NULL;
+		tag_mem->is_reference = 0;
+		ptr->tag = tag_mem;
 	}
-	if (Packer_buffer_rest_size(ptr) < require) {
+	if (Packer_tag_rest_size(ptr) < require) {
 		if (Packer_realloc(ptr, require) == NULL) {
 			rb_raise(rb_eNoMemError, "Packer can not realloc.");
 		}
@@ -129,28 +129,28 @@ Packer_check (packer_t* ptr, size_t require)
 }
 
 static void
-Packer_write_buffer_1 (packer_t* ptr, char ch)
+Packer_write_tag_1 (packer_t* ptr, char ch)
 {
-	*ptr->buffer->end++ = ch;
+	*ptr->tag->end++ = ch;
 }
 
 static void
-Packer_write_buffer_cpy (packer_t* ptr, VALUE string)
+Packer_write_tag_cpy (packer_t* ptr, VALUE string)
 {
 	const char* p = RSTRING_PTR(string);
 	uint32_t len = RSTRING_LEN(string);
 
-	memcpy(ptr->buffer->end, p, len);
-	ptr->buffer->end += len;
+	memcpy(ptr->tag->end, p, len);
+	ptr->tag->end += len;
 }
 
 static void
 Packer_write_positive_num_1 (packer_t* ptr, unsigned int word)
 {
 	if (word < 10) {
-		Packer_write_buffer_1(ptr, word + '0');
+		Packer_write_tag_1(ptr, word + '0');
 	} else {
-		Packer_write_buffer_1(ptr, word + 'a' - 10);
+		Packer_write_tag_1(ptr, word + 'a' - 10);
 	}
 }
 
@@ -209,7 +209,7 @@ Packer_write_ubignum(packer_t* ptr, VALUE ubignum)
 {
 	uint64_t n = rb_big2ull(ubignum);
 
-	Packer_write_buffer_1(ptr, 'j');
+	Packer_write_tag_1(ptr, 'j');
 	Packer_write_uint64(ptr, n);
 }
 
@@ -219,7 +219,7 @@ Packer_write_bignum(packer_t* ptr, VALUE bignum)
 	int64_t v = rb_big2ll(bignum);
 	union unegative_int cb;
 
-	Packer_write_buffer_1(ptr, 'e');
+	Packer_write_tag_1(ptr, 'e');
 	cb.i64 = v;
 	Packer_write_uint64(ptr, cb.ul);
 }
@@ -244,27 +244,27 @@ Packer_fixnum (packer_t* ptr, VALUE fixnum)
 	if (v < 0) {
 		if (-0x8 <= v) {
 			Packer_check(ptr, 2);
-			Packer_write_buffer_1(ptr, 'a');
+			Packer_write_tag_1(ptr, 'a');
 			cb.i4 = v;
 			Packer_write_positive_num_1(ptr, cb.ul & 0x0f);
 		} else if (-0x80 <= v) {
 			Packer_check(ptr, 3);
-			Packer_write_buffer_1(ptr, 'b');
+			Packer_write_tag_1(ptr, 'b');
 			cb.i8 = v;
 			Packer_write_uint8(ptr, cb.ul);
 		} else if (-0x8000L <= v) {
 			Packer_check(ptr, 5);
-			Packer_write_buffer_1(ptr, 'c');
+			Packer_write_tag_1(ptr, 'c');
 			cb.i16 = v;
 			Packer_write_uint16(ptr, cb.ul);
 		} else if (-0x80000000LL <= v) {
 			Packer_check(ptr, 9);
-			Packer_write_buffer_1(ptr, 'd');
+			Packer_write_tag_1(ptr, 'd');
 			cb.i32 = v;
 			Packer_write_uint32(ptr, cb.ul);
 		} else {
 			Packer_check(ptr, 17);
-			Packer_write_buffer_1(ptr, 'e');
+			Packer_write_tag_1(ptr, 'e');
 			cb.i64 = v;
 			Packer_write_uint64(ptr, cb.ul);
 		}
@@ -273,30 +273,30 @@ Packer_fixnum (packer_t* ptr, VALUE fixnum)
 		if (v < 0x10) {
 			Packer_check(ptr, 1);
 			if (v < 0x0a) {
-				Packer_write_buffer_1(ptr, v + '0');
+				Packer_write_tag_1(ptr, v + '0');
 			} else {
-				Packer_write_buffer_1(ptr, v + 'A' - 10);
+				Packer_write_tag_1(ptr, v + 'A' - 10);
 			}
 			return;
 
 		} else if (v < 0x100) {
 			Packer_check(ptr, 3);
-			Packer_write_buffer_1(ptr, 'g');
+			Packer_write_tag_1(ptr, 'g');
 			Packer_write_uint8(ptr, v);
 
 		} else if (v < 0x10000LL) {
 			Packer_check(ptr, 5);
-			Packer_write_buffer_1(ptr, 'h');
+			Packer_write_tag_1(ptr, 'h');
 			Packer_write_uint16(ptr, v);
 
 		} else if (v < 0x100000000LL) {
 			Packer_check(ptr, 9);
-			Packer_write_buffer_1(ptr, 'i');
+			Packer_write_tag_1(ptr, 'i');
 			Packer_write_uint32(ptr, v);
 
 		} else {
 			Packer_check(ptr, 17);
-			Packer_write_buffer_1(ptr, 'j');
+			Packer_write_tag_1(ptr, 'j');
 			Packer_write_uint64(ptr, v);
 		}
 	}
@@ -312,7 +312,7 @@ Packer_float (packer_t* ptr, VALUE floatnum)
 	} converter = {float64};
 
 	Packer_check(ptr, 17);
-	Packer_write_buffer_1(ptr, 'l');
+	Packer_write_tag_1(ptr, 'l');
 	Packer_write_uint64(ptr, converter.u64);
 }
 
@@ -321,18 +321,18 @@ Packer_write_string_header (packer_t* ptr, uint32_t len)
 {
 	if (len < 0x10) {
 		Packer_check(ptr, 1);
-		Packer_write_buffer_1(ptr, 'G' + len);
+		Packer_write_tag_1(ptr, 'G' + len);
 	} else if (len < 0x100) {
 		Packer_check(ptr, 3);
-		Packer_write_buffer_1(ptr, 'n');
+		Packer_write_tag_1(ptr, 'n');
 		Packer_write_uint8(ptr, len);
 	} else if (len < 0x10000) {
 		Packer_check(ptr, 5);
-		Packer_write_buffer_1(ptr, 'o');
+		Packer_write_tag_1(ptr, 'o');
 		Packer_write_uint16(ptr, len);
 	} else {
 		Packer_check(ptr, 9);
-		Packer_write_buffer_1(ptr, 'p');
+		Packer_write_tag_1(ptr, 'p');
 		Packer_write_uint32(ptr, len);
 	}
 }
@@ -343,18 +343,18 @@ Packer_write_string_reference (packer_t* ptr, VALUE string)
 	VALUE dup = rb_str_dup(string);
 	char* p = RSTRING_PTR(dup);
 	uint32_t len = RSTRING_LEN(dup);
-	buffer_t* buffer_reference = (buffer_t*) malloc(sizeof(buffer_t));
+	tag_t* tag_reference = (tag_t*) malloc(sizeof(tag_t));
 
-	if (!ptr->buffer->is_reference) {
-		ptr->mem_end = ptr->buffer->end;
+	if (!ptr->tag->is_reference) {
+		ptr->mem_end = ptr->tag->end;
 	}
 
-	buffer_reference->begin = p;
-	buffer_reference->end = p + len;
-	buffer_reference->next = NULL;
-	buffer_reference->is_reference = 1;
-	ptr->buffer->next = buffer_reference;
-	ptr->buffer = buffer_reference;
+	tag_reference->begin = p;
+	tag_reference->end = p + len;
+	tag_reference->next = NULL;
+	tag_reference->is_reference = 1;
+	ptr->tag->next = tag_reference;
+	ptr->tag = tag_reference;
 }
 
 static void
@@ -366,7 +366,7 @@ Packer_str (packer_t* ptr, VALUE string)
 
 	if (len < 131072L) {
 		Packer_check(ptr, len);
-		Packer_write_buffer_cpy(ptr, string);
+		Packer_write_tag_cpy(ptr, string);
 	} else {
 		Packer_write_string_reference(ptr, string);
 	}
@@ -382,7 +382,7 @@ Packer_symbol (packer_t* ptr, VALUE symbol)
 
 	Packer_check(ptr, len);
 	while (len--) {
-		Packer_write_buffer_1(ptr, *p++);
+		Packer_write_tag_1(ptr, *p++);
 	}
 }
 
@@ -394,19 +394,19 @@ Packer_array (packer_t* ptr, VALUE array)
 
 	if (len < 0x10) {
 		Packer_check(ptr, 2);
-		Packer_write_buffer_1(ptr, 'v');
+		Packer_write_tag_1(ptr, 'v');
 		Packer_write_positive_num_1(ptr, len);
 	} else if (len < 0x100) {
 		Packer_check(ptr, 3);
-		Packer_write_buffer_1(ptr, 'w');
+		Packer_write_tag_1(ptr, 'w');
 		Packer_write_uint8(ptr, len);
 	} else if (len < 0x10000) {
 		Packer_check(ptr, 5);
-		Packer_write_buffer_1(ptr, 'x');
+		Packer_write_tag_1(ptr, 'x');
 		Packer_write_uint16(ptr, len);
 	} else {
 		Packer_check(ptr, 9);
-		Packer_write_buffer_1(ptr, 'y');
+		Packer_write_tag_1(ptr, 'y');
 		Packer_write_uint32(ptr, len);
 	}
 
@@ -432,19 +432,19 @@ Packer_map (packer_t* ptr, VALUE hash)
 
 	if (len < 0x10) {
 		Packer_check(ptr, 2);
-		Packer_write_buffer_1(ptr, 'r');
+		Packer_write_tag_1(ptr, 'r');
 		Packer_write_positive_num_1(ptr, len);
 	} else if (len < 0x100) {
 		Packer_check(ptr, 3);
-		Packer_write_buffer_1(ptr, 's');
+		Packer_write_tag_1(ptr, 's');
 		Packer_write_uint8(ptr, len);
 	} else if (len < 0x10000) {
 		Packer_check(ptr, 5);
-		Packer_write_buffer_1(ptr, 't');
+		Packer_write_tag_1(ptr, 't');
 		Packer_write_uint16(ptr, len);
 	} else {
 		Packer_check(ptr, 9);
-		Packer_write_buffer_1(ptr, 'u');
+		Packer_write_tag_1(ptr, 'u');
 		Packer_write_uint32(ptr, len);
 	}
 
@@ -456,7 +456,7 @@ Packer_write_to_s (packer_t* ptr)
 {
 	uint64_t length = ptr->start->end - ptr->mem;
 	uint64_t total_length = length;
-	buffer_t* b = ptr->start->next;
+	tag_t* b = ptr->start->next;
 	char* p = NULL;
 	VALUE string;
 
@@ -495,8 +495,8 @@ Packer_to_s (VALUE self)
 static void
 Packer_write_clear (packer_t* ptr)
 {
-	buffer_t* b;
-	buffer_t* next;
+	tag_t* b;
+	tag_t* next;
 
 	*ptr->mem = '\0';
 	ptr->mem_end = ptr->mem;
@@ -512,7 +512,7 @@ Packer_write_clear (packer_t* ptr)
 	ptr->start->begin = ptr->mem;
 	ptr->start->end = ptr->mem;
 	ptr->start->next = NULL;
-	ptr->buffer = ptr->start;
+	ptr->tag = ptr->start;
 }
 
 static VALUE
@@ -527,21 +527,21 @@ static void
 Packer_nil (packer_t* ptr)
 {
 	Packer_check(ptr, 1);
-	Packer_write_buffer_1(ptr, 'W');
+	Packer_write_tag_1(ptr, 'W');
 }
 
 static void
 Packer_false (packer_t* ptr)
 {
 	Packer_check(ptr, 1);
-	Packer_write_buffer_1(ptr, 'X');
+	Packer_write_tag_1(ptr, 'X');
 }
 
 static void
 Packer_true (packer_t* ptr)
 {
 	Packer_check(ptr, 1);
-	Packer_write_buffer_1(ptr, 'Y');
+	Packer_write_tag_1(ptr, 'Y');
 }
 
 static void

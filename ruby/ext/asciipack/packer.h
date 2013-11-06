@@ -12,7 +12,7 @@
  * +-----------------------+
  * |     ||           |    |
  * +-----------------------+
- * ^mem  ^(buffer)    ^mem_end
+ * ^mem  ^(tag)    ^mem_end
  *
  * main write strings memory.
  * realloc when will write over size string.
@@ -20,29 +20,29 @@
  * it is skip and continue write from mem_end.
  *
  *
- * buffer:
+ * tag:
  * +--------------------------+
- * | buffer(too large string) |
+ * | tag(too large string) |
  * +--------------------------+ ... 
  * ^begin                     ^end
  *
- * too large string buffer to use Copy-on-Write.
- * buffer->next look packer or an another buffer.
+ * too large string tag to use Copy-on-Write.
+ * tag->next look packer or an another tag.
  */
 
-struct buffer {
+struct tag {
 	char* begin;
 	char* end;
 	unsigned int is_reference:1;
-	struct buffer* next;
+	struct tag* next;
 };
-typedef struct buffer buffer_t;
+typedef struct tag tag_t;
 
 struct packer {
 	char* mem;
 	char* mem_end;
-	buffer_t* buffer;
-	buffer_t* start;
+	tag_t* tag;
+	tag_t* start;
 	size_t memsize;
 };
 typedef struct packer packer_t;
