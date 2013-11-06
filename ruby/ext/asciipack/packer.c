@@ -593,7 +593,7 @@ static VALUE
 AsciiPack_pack (int argc, VALUE* argv)
 {
 	VALUE str;
-	VALUE v = argv[0];
+	VALUE v = *argv;
 	VALUE self = Packer_alloc(cAsciiPack_Packer);
 
 	PACKER(self, ptr);

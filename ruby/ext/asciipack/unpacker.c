@@ -2,7 +2,7 @@
 
 VALUE cAsciiPack_Unpacker;
 
-static VALUE Unpacker_read(unpacker_t* ptr);
+static VALUE Unpacker_buffer_read(unpacker_t* ptr);
 
 static void
 unpacker_mark(unpacker_t* ptr)
@@ -25,12 +25,8 @@ Unpacker_init(VALUE self, VALUE obj, int argc, VALUE *argv, VALUE size)
 		rb_raise(rb_eArgError, "unallocated unpacker");
 	}
 
-	if (rb_type(obj) != T_STRING) {
-		rb_raise(rb_eArgError, "can not unpack object");
-	}
-
-	ptr->buffer = RSTRING_PTR(obj);
-	ptr->ch = ptr->buffer;
+	ptr->buffer = NULL;
+	ptr->ch = NULL;
 
 	return self;
 }
@@ -104,8 +100,8 @@ Unpacker_str (unpacker_t* ptr, size_t len)
 	char* head = ptr->ch;
 
 	VALUE str = rb_str_new(head, len);
-	rb_funcall(str, rb_intern("force_encoding"), 1, rb_str_new2("utf-8"));
 	ptr->ch += len;
+	rb_funcall(str, rb_intern("force_encoding"), 1, rb_str_new2("utf-8"));
 	return str;
 }
 
@@ -115,8 +111,8 @@ Unpacker_map (unpacker_t* ptr, size_t len)
 	VALUE map = rb_hash_new();
 	VALUE key, value;
 	while (len--) {
-		key = Unpacker_read(ptr);
-		value = Unpacker_read(ptr);
+		key = Unpacker_buffer_read(ptr);
+		value = Unpacker_buffer_read(ptr);
 		rb_hash_aset(map, key, value);
 	}
 	return map;
@@ -127,13 +123,13 @@ Unpacker_array (unpacker_t* ptr, size_t len)
 {
 	VALUE array = rb_ary_new2(len);
 	while (len--) {
-		rb_ary_push(array, Unpacker_read(ptr));
+		rb_ary_push(array, Unpacker_buffer_read(ptr));
 	}
 	return array;
 }
 
 static VALUE
-Unpacker_read (unpacker_t* ptr)
+Unpacker_buffer_read (unpacker_t* ptr)
 {
 	uint64_t num;
 
@@ -274,17 +270,64 @@ Unpacker_read (unpacker_t* ptr)
 }
 
 static VALUE
-Unpacker_unpack (VALUE self)
+Unpacker_read (VALUE self)
 {
 	UNPACKER(self, ptr);
-	return Unpacker_read(ptr);
+
+	return Unpacker_buffer_read(ptr);
+}
+
+static void
+Unpacker_buffer_feed (unpacker_t* ptr, VALUE obj)
+{
+	if (rb_type(obj) != T_STRING) {
+		rb_raise(rb_eArgError, "can not unpack object");
+	}
+
+	char* p = RSTRING_PTR(obj);
+
+	ptr->buffer = p;
+	ptr->ch = p;
 }
 
 static VALUE
-AsciiPack_unpack (int argc, VALUE *argv, VALUE self)
+Unpacker_feed (VALUE self, VALUE obj)
 {
-	VALUE unpacker = rb_funcall(cAsciiPack_Unpacker, rb_intern("new"), 1, argv[0]);
-	return rb_funcall(unpacker, rb_intern("unpack"), 0);
+	UNPACKER(self, ptr);
+
+	Unpacker_buffer_feed(ptr, obj);
+
+	return self;
+}
+
+static void
+Unpacker_buffer_clear (unpacker_t* ptr)
+{
+	ptr->buffer = NULL;
+	ptr->ch = NULL;
+}
+
+static VALUE
+Unpacker_clear (VALUE self)
+{
+	UNPACKER(self, ptr);
+
+	Unpacker_buffer_clear(ptr);
+
+	return self;
+}
+
+static VALUE
+AsciiPack_unpack (int argc, VALUE *argv)
+{
+	VALUE v = argv[0];
+	VALUE self = Unpacker_alloc(cAsciiPack_Unpacker);
+
+	UNPACKER(self, ptr);
+
+	Unpacker_buffer_feed(ptr, v);
+
+	return Unpacker_buffer_read(ptr);
 }
 
 void
@@ -295,7 +338,10 @@ AsciiPack_Unpacker_init(VALUE mAsciiPack)
 	rb_define_alloc_func(cAsciiPack_Unpacker, Unpacker_alloc);
 
 	rb_define_method(cAsciiPack_Unpacker, "initialize", Unpacker_initialize, -1);
-	rb_define_method(cAsciiPack_Unpacker, "unpack", Unpacker_unpack, 0);
+	rb_define_method(cAsciiPack_Unpacker, "feed", Unpacker_feed, 1);
+	rb_define_method(cAsciiPack_Unpacker, "read", Unpacker_read, 0);
+	rb_define_alias(cAsciiPack_Unpacker, "<<", "feed");
+	rb_define_method(cAsciiPack_Unpacker, "clear", Unpacker_clear, 0);
 
 	rb_define_module_function(mAsciiPack, "unpack", AsciiPack_unpack, -1);
 }
