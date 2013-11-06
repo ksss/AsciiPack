@@ -162,5 +162,5 @@ Value abide IEEE 754 format.
   <tr><th>Serializer</th><th>Length</th><th>Speed</th><th>Readability</th></tr>
   <tr><td>JSON</td><td>×</td><td>△</td><td>○</td></tr>
   <tr><td>MessagePack</td><td>○</td><td>○</td><td>×</td></tr>
-  <tr><td>AsciiPack</td><td>△</td><td>×</td><td>△</td></tr>
+  <tr><td>AsciiPack</td><td>△</td><td>○</td><td>△</td></tr>
 </table>
