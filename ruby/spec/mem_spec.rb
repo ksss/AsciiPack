@@ -21,8 +21,7 @@ describe "AsciiPack:memory" do
       packer.clear
       expect(packer.to_s).to eq("")
     }
-    ap = obj.to_asciipack
-    expect(AsciiPack.unpack(ap)).to eq(obj)
+    expect(AsciiPack.unpack(obj.to_asciipack)).to eq(obj)
   end
 end
 

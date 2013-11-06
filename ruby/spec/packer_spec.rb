@@ -5,7 +5,7 @@ describe AsciiPack::Packer do
     AsciiPack::Packer.new
   end
 
-  it "pack" do
+  it "pack:to_s:clear" do
     packer.write nil
     expect(packer.to_s).to eq(T.nil)
 
@@ -17,5 +17,8 @@ describe AsciiPack::Packer do
 
     packer.clear
     expect(packer.to_s).to eq("")
+
+    packer.write nil
+    expect(packer.to_s).to eq(T.nil)
   end
 end
