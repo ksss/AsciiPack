@@ -64,6 +64,7 @@ tt = Time.now
 }
 
 puts "\n"
+puts "RUBY_VERSION:#{RUBY_VERSION}"
 puts "count:#{count}"
 puts "unit:/ms"
 puts 'total:' + (Time.now - tt).to_s + 's'
