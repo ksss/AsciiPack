@@ -1,6 +1,7 @@
 #! /usr/bin/env ruby
 
 lib = File.expand_path('../../lib', __FILE__)
+here = File.dirname(File.expand_path(__FILE__))
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'asciipack'
@@ -12,7 +13,7 @@ def count
 end
 
 def reports (obj)
-  obj = [obj] * 100
+  obj =[obj] * 10
   json = obj.to_json
   ap = AsciiPack.pack obj
   ms = Marshal.dump obj
@@ -39,7 +40,7 @@ def json_asciipack(name, obj)
     count.times {
       func.call
     }
-    results << "%.1f" % ((Time.now - t) * 1000)
+    results << "%.6f" % ((Time.now - t) * 1000)
   }
   puts results.join("|") + "|"
 end
@@ -48,23 +49,16 @@ puts("|object|" + reports(0).keys.join("|") + "|")
 puts("|---|" + reports(0).keys.map{"---"}.join("|") + "|")
 
 map16 = {}
-0x100.times {|i| map16[i.to_s] = 0 }
+0x10000.times {|i| map16[i.to_s] = 0 }
 
 tt = Time.now
 {
-  "positive fixint" => 0,
-  "uint 64" => 0xffffffffffffffff,
-  "int 4" => -1,
-  "int 64" => -0x8000000000000000,
-  "float 64" => 1/3,
-  "fixstr" => "a",
-  "str (1KB)" => 'a' * 1024,
-  "str (1MB)" => 'a' * 1024*1024,
-  "map 4" => {},
-  "map 16" => map16,
-  "array 4" => [],
-  "array 16" => Array.new(0x100,0),
-  "nil" => nil,
+  "float 64" => [1/3] * 100,
+  "str (1KB)" => ['a' * 1024],
+  "str (1MB)" => ['a' * 1024*1024],
+  "str (100MB)" => ['a' * 100*1024*1024],
+  "map 32" => map16,
+  "array 32" => Array.new(0x10000,0),
 }.each { |key, value|
   json_asciipack key, value
 }
