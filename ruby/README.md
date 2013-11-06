@@ -24,3 +24,5 @@ gem install asciipack
 ```
 
 see also [https://github.com/ksss/AsciiPack/blob/master/README.md](https://github.com/ksss/AsciiPack/blob/master/README.md)
+
+bench mark [https://gist.github.com/ksss/7336517](https://gist.github.com/ksss/7336517)
