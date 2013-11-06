@@ -214,36 +214,6 @@ Packer_write_ubignum(packer_t* ptr, VALUE ubignum)
 }
 
 static void
-Packer_write_positive_num (packer_t* ptr, uint64_t n, unsigned int bytesize)
-{
-	if (n == 0) {
-		return Packer_write_buffer_1(ptr, '0');
-	}
-
-	switch (bytesize) {
-	case 1:
-		Packer_write_positive_num_1(ptr, n & 0x0f);
-		break;
-
-	case 2:
-		Packer_write_uint8(ptr, n);
-		break;
-
-	case 4:
-		Packer_write_uint16(ptr, n);
-		break;
-
-	case 8:
-		Packer_write_uint32(ptr, n);
-		break;
-
-	case 16:
-		Packer_write_uint64(ptr, n);
-		break;
-	}
-}
-
-static void
 Packer_write_bignum(packer_t* ptr, VALUE bignum)
 {
 	int64_t v = rb_big2ll(bignum);
@@ -251,7 +221,7 @@ Packer_write_bignum(packer_t* ptr, VALUE bignum)
 
 	Packer_write_buffer_1(ptr, 'e');
 	cb.i64 = v;
-	Packer_write_positive_num(ptr, cb.ul, 16);
+	Packer_write_uint64(ptr, cb.ul);
 }
 
 static void
@@ -276,27 +246,27 @@ Packer_fixnum (packer_t* ptr, VALUE fixnum)
 			Packer_check(ptr, 2);
 			Packer_write_buffer_1(ptr, 'a');
 			cb.i4 = v;
-			Packer_write_positive_num(ptr, cb.ul, 1);
+			Packer_write_positive_num_1(ptr, cb.ul & 0x0f);
 		} else if (-0x80 <= v) {
 			Packer_check(ptr, 3);
 			Packer_write_buffer_1(ptr, 'b');
 			cb.i8 = v;
-			Packer_write_positive_num(ptr, cb.ul, 2);
+			Packer_write_uint8(ptr, cb.ul);
 		} else if (-0x8000L <= v) {
 			Packer_check(ptr, 5);
 			Packer_write_buffer_1(ptr, 'c');
 			cb.i16 = v;
-			Packer_write_positive_num(ptr, cb.ul, 4);
+			Packer_write_uint16(ptr, cb.ul);
 		} else if (-0x80000000LL <= v) {
 			Packer_check(ptr, 9);
 			Packer_write_buffer_1(ptr, 'd');
 			cb.i32 = v;
-			Packer_write_positive_num(ptr, cb.ul, 8);
+			Packer_write_uint32(ptr, cb.ul);
 		} else {
 			Packer_check(ptr, 17);
 			Packer_write_buffer_1(ptr, 'e');
 			cb.i64 = v;
-			Packer_write_positive_num(ptr, cb.ul, 16);
+			Packer_write_uint64(ptr, cb.ul);
 		}
 
 	} else {
@@ -312,22 +282,22 @@ Packer_fixnum (packer_t* ptr, VALUE fixnum)
 		} else if (v < 0x100) {
 			Packer_check(ptr, 3);
 			Packer_write_buffer_1(ptr, 'g');
-			Packer_write_positive_num(ptr, v, 2);
+			Packer_write_uint8(ptr, v);
 
 		} else if (v < 0x10000LL) {
 			Packer_check(ptr, 5);
 			Packer_write_buffer_1(ptr, 'h');
-			Packer_write_positive_num(ptr, v, 4);
+			Packer_write_uint16(ptr, v);
 
 		} else if (v < 0x100000000LL) {
 			Packer_check(ptr, 9);
 			Packer_write_buffer_1(ptr, 'i');
-			Packer_write_positive_num(ptr, v, 8);
+			Packer_write_uint32(ptr, v);
 
 		} else {
 			Packer_check(ptr, 17);
 			Packer_write_buffer_1(ptr, 'j');
-			Packer_write_positive_num(ptr, v, 16);
+			Packer_write_uint64(ptr, v);
 		}
 	}
 }
@@ -355,15 +325,15 @@ Packer_write_string_header (packer_t* ptr, uint32_t len)
 	} else if (len < 0x100) {
 		Packer_check(ptr, 3);
 		Packer_write_buffer_1(ptr, 'n');
-		Packer_write_positive_num(ptr, len, 2);
+		Packer_write_uint8(ptr, len);
 	} else if (len < 0x10000) {
 		Packer_check(ptr, 5);
 		Packer_write_buffer_1(ptr, 'o');
-		Packer_write_positive_num(ptr, len, 4);
+		Packer_write_uint16(ptr, len);
 	} else {
 		Packer_check(ptr, 9);
 		Packer_write_buffer_1(ptr, 'p');
-		Packer_write_positive_num(ptr, len, 8);
+		Packer_write_uint32(ptr, len);
 	}
 }
 
@@ -425,19 +395,19 @@ Packer_array (packer_t* ptr, VALUE array)
 	if (len < 0x10) {
 		Packer_check(ptr, 2);
 		Packer_write_buffer_1(ptr, 'v');
-		Packer_write_positive_num(ptr, len, 1);
+		Packer_write_positive_num_1(ptr, len);
 	} else if (len < 0x100) {
 		Packer_check(ptr, 3);
 		Packer_write_buffer_1(ptr, 'w');
-		Packer_write_positive_num(ptr, len, 2);
+		Packer_write_uint8(ptr, len);
 	} else if (len < 0x10000) {
 		Packer_check(ptr, 5);
 		Packer_write_buffer_1(ptr, 'x');
-		Packer_write_positive_num(ptr, len, 4);
+		Packer_write_uint16(ptr, len);
 	} else {
 		Packer_check(ptr, 9);
 		Packer_write_buffer_1(ptr, 'y');
-		Packer_write_positive_num(ptr, len, 8);
+		Packer_write_uint32(ptr, len);
 	}
 
 	for (i = 0; i < len; i++) {
@@ -463,19 +433,19 @@ Packer_map (packer_t* ptr, VALUE hash)
 	if (len < 0x10) {
 		Packer_check(ptr, 2);
 		Packer_write_buffer_1(ptr, 'r');
-		Packer_write_positive_num(ptr, len, 1);
+		Packer_write_positive_num_1(ptr, len);
 	} else if (len < 0x100) {
 		Packer_check(ptr, 3);
 		Packer_write_buffer_1(ptr, 's');
-		Packer_write_positive_num(ptr, len, 2);
+		Packer_write_uint8(ptr, len);
 	} else if (len < 0x10000) {
 		Packer_check(ptr, 5);
 		Packer_write_buffer_1(ptr, 't');
-		Packer_write_positive_num(ptr, len, 4);
+		Packer_write_uint16(ptr, len);
 	} else {
 		Packer_check(ptr, 9);
 		Packer_write_buffer_1(ptr, 'u');
-		Packer_write_positive_num(ptr, len, 8);
+		Packer_write_uint32(ptr, len);
 	}
 
 	rb_hash_foreach(hash, Packer_write_hash_each, (VALUE) ptr);
