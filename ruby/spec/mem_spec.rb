@@ -4,11 +4,11 @@ require 'spec_helper'
 
 describe "AsciiPack:memory" do
   it "packer:num" do
-    check([1,1.1,-1.1,1/3,0xffffffffffffffff,-0x8000000000000000,0,Float::INFINITY] * 10)
+    check([1,1.1,-1.1,1/3,0xffffffffffffffff,-0x8000000000000000,0,Float::INFINITY] * 3)
   end
 
   it "packer:str" do
-    check(["a"*100*1024*1024,"b"*1024*1024,"c"*1024] * 10)
+    check(["a"*100*1024*1024,"b"*1024*1024,"c"*1024] * 3)
   end
 
   def check (obj)

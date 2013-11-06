@@ -79,7 +79,6 @@ Packer_realloc (packer_t* ptr, size_t require)
 	size_t len = Packer_buffer_writed_size(ptr);
 	size_t require_size = require + len;
 	char* mem;
-	unsigned short before_is_reference = 0;
 	buffer_t* b = ptr->start;
 
 	while (newsize < require_size) {
@@ -488,14 +487,16 @@ Packer_write_to_s (packer_t* ptr)
 	uint64_t length = ptr->start->end - ptr->mem;
 	uint64_t total_length = length;
 	buffer_t* b = ptr->start->next;
+	char* p = NULL;
+	VALUE string;
 
 	while (b != NULL) {
 		total_length += b->end - b->begin;
 		b = b->next;
 	}
 
-	VALUE string = rb_str_new(NULL, total_length);
-	char* p = RSTRING_PTR(string);
+	string = rb_str_new(NULL, total_length);
+	p = RSTRING_PTR(string);
 	memcpy(p, ptr->mem, length);
 	p += length;
 
