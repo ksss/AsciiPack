@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "packer.h"
 
 VALUE cAsciiPack_Packer;
@@ -13,7 +12,15 @@ Packer_mark (packer_t* ptr)
 static void
 Packer_free (packer_t* ptr)
 {
-	free(PACKER_BUFFER(ptr)->mem);
+	buffer_t* b = ptr->start;
+	buffer_t* next;
+
+	while (b != NULL) {
+		next = b->next;
+		free(b);
+		b = next;
+	}
+	free(ptr->mem);
 }
 
 static VALUE
@@ -26,10 +33,18 @@ Packer_alloc (VALUE klass)
 static void
 Packer_init (packer_t* ptr)
 {
-	memset(&(ptr)->buffer, 0, sizeof(buffer_t));
-	PACKER_BUFFER(ptr)->mem = (char*) malloc(sizeof(char) * MEMSIZE_INIT);
-	PACKER_BUFFER(ptr)->seek = PACKER_BUFFER(ptr)->mem;
+	buffer_t* buffer = (buffer_t*) malloc(sizeof(buffer_t));
+	char* mem = (char*) malloc(sizeof(char) * MEMSIZE_INIT);
+
+	ptr->mem = mem;
+	ptr->mem_end = mem;
 	ptr->memsize = MEMSIZE_INIT;
+	ptr->start = buffer;
+	ptr->buffer = ptr->start;
+	ptr->buffer->begin = mem;
+	ptr->buffer->end = mem;
+	ptr->buffer->is_reference = 0;
+	ptr->buffer->next = NULL;
 }
 
 static VALUE
@@ -46,34 +61,70 @@ Packer_initialize (int argc, VALUE *argv, VALUE self)
 }
 
 static size_t
+Packer_buffer_writed_size (packer_t* ptr)
+{
+	return ptr->buffer->end - ptr->mem;
+}
+
+static size_t
 Packer_buffer_rest_size (packer_t* ptr)
 {
-	return ptr->memsize - (PACKER_BUFFER(ptr)->seek - PACKER_BUFFER(ptr)->mem);
+	return ptr->memsize - Packer_buffer_writed_size(ptr);
 }
 
 static char*
 Packer_realloc (packer_t* ptr, size_t require)
 {
 	size_t newsize = ptr->memsize;
-	size_t len = PACKER_BUFFER(ptr)->seek - PACKER_BUFFER(ptr)->mem;
+	size_t len = Packer_buffer_writed_size(ptr);
 	size_t require_size = require + len;
+	char* mem;
+	unsigned short before_is_reference = 0;
+	buffer_t* b = ptr->start;
 
 	while (newsize < require_size) {
 		newsize *= 2;
 	}
 
-	PACKER_BUFFER(ptr)->mem = realloc(PACKER_BUFFER(ptr)->mem, sizeof(char) * newsize);
-	PACKER_BUFFER(ptr)->seek = PACKER_BUFFER(ptr)->mem + len;
+	mem = (char*) realloc(ptr->mem, sizeof(char) * newsize);
+	ptr->mem = mem;
 	ptr->memsize = newsize;
-	return PACKER_BUFFER(ptr)->mem;
+	if (mem == NULL) {
+		return NULL;
+	}
+
+	while (1) {
+		if (!b->is_reference) {
+			len = b->end - b->begin;
+			b->begin = mem;
+			b->end = mem + len;
+			ptr->mem_end = b->end;
+			mem += len;
+		}
+		if (b->next == NULL) {
+			return ptr->mem;
+		}
+		b = b->next;
+	}
 }
 
 static void
 Packer_check (packer_t* ptr, size_t require)
 {
+	if (ptr->buffer->is_reference) {
+		buffer_t* buffer_mem = (buffer_t*) malloc(sizeof(buffer_t));
+
+		ptr->buffer->next = buffer_mem;
+
+		buffer_mem->begin = ptr->mem_end;
+		buffer_mem->end = ptr->mem_end;
+		buffer_mem->next = NULL;
+		buffer_mem->is_reference = 0;
+		ptr->buffer = buffer_mem;
+	}
 	if (Packer_buffer_rest_size(ptr) < require) {
 		if (Packer_realloc(ptr, require) == NULL) {
-			rb_raise(rb_eNoMemError, "Packer can not realloc.(size=%ld)", ptr->memsize);
+			rb_raise(rb_eNoMemError, "Packer can not realloc.");
 		}
 	}
 }
@@ -81,7 +132,17 @@ Packer_check (packer_t* ptr, size_t require)
 static void
 Packer_write_buffer_1 (packer_t* ptr, char ch)
 {
-	*PACKER_BUFFER(ptr)->seek++ = ch;
+	*ptr->buffer->end++ = ch;
+}
+
+static void
+Packer_write_buffer_cpy (packer_t* ptr, VALUE string)
+{
+	const char* p = RSTRING_PTR(string);
+	uint32_t len = RSTRING_LEN(string);
+
+	memcpy(ptr->buffer->end, p, len);
+	ptr->buffer->end += len;
 }
 
 static void
@@ -308,16 +369,37 @@ Packer_write_string_header (packer_t* ptr, uint32_t len)
 }
 
 static void
+Packer_write_string_reference (packer_t* ptr, VALUE string)
+{
+	VALUE dup = rb_str_dup(string);
+	char* p = RSTRING_PTR(dup);
+	uint32_t len = RSTRING_LEN(dup);
+	buffer_t* buffer_reference = (buffer_t*) malloc(sizeof(buffer_t));
+
+	if (!ptr->buffer->is_reference) {
+		ptr->mem_end = ptr->buffer->end;
+	}
+
+	buffer_reference->begin = p;
+	buffer_reference->end = p + len;
+	buffer_reference->next = NULL;
+	buffer_reference->is_reference = 1;
+	ptr->buffer->next = buffer_reference;
+	ptr->buffer = buffer_reference;
+}
+
+static void
 Packer_str (packer_t* ptr, VALUE string)
 {
 	uint32_t len = RSTRING_LEN(string);
-	const char* p = RSTRING_PTR(string);
 
 	Packer_write_string_header(ptr, len);
 
-	Packer_check(ptr, len);
-	while (len--) {
-		Packer_write_buffer_1(ptr, *p++);
+	if (len < 131072L) {
+		Packer_check(ptr, len);
+		Packer_write_buffer_cpy(ptr, string);
+	} else {
+		Packer_write_string_reference(ptr, string);
 	}
 }
 
@@ -401,17 +483,65 @@ Packer_map (packer_t* ptr, VALUE hash)
 }
 
 static VALUE
+Packer_write_to_s (packer_t* ptr)
+{
+	uint64_t length = ptr->start->end - ptr->mem;
+	uint64_t total_length = length;
+	buffer_t* b = ptr->start->next;
+
+	while (b != NULL) {
+		total_length += b->end - b->begin;
+		b = b->next;
+	}
+
+	VALUE string = rb_str_new(NULL, total_length);
+	char* p = RSTRING_PTR(string);
+	memcpy(p, ptr->mem, length);
+	p += length;
+
+	b = ptr->start->next;
+	if (b == NULL) {
+		return string;
+	}
+	while (1) {
+		length = b->end - b->begin;
+		memcpy(p, b->begin, length);
+		if (b->next == NULL) {
+			return string;
+		}
+		p += length;
+		b = b->next;
+	}
+}
+
+static VALUE
 Packer_to_s (VALUE self)
 {
 	PACKER(self, ptr);
-	return rb_str_new(PACKER_BUFFER(ptr)->mem, PACKER_BUFFER(ptr)->seek - PACKER_BUFFER(ptr)->mem);
+	return Packer_write_to_s(ptr);
 }
 
 static void
 Packer_write_clear (packer_t* ptr)
 {
-	PACKER_BUFFER(ptr)->seek = PACKER_BUFFER(ptr)->mem;
-	*PACKER_BUFFER(ptr)->seek = '\0';
+	buffer_t* b;
+	buffer_t* next;
+
+	*ptr->mem = '\0';
+	ptr->mem_end = ptr->mem;
+
+	if (ptr->start->next != NULL) {
+		b = ptr->start->next;
+		while (b != NULL) {
+			next = b->next;
+			free(b);
+			b = next;
+		}
+	}
+	ptr->start->begin = ptr->mem;
+	ptr->start->end = ptr->mem;
+	ptr->start->next = NULL;
+	ptr->buffer = ptr->start;
 }
 
 static VALUE
@@ -496,7 +626,6 @@ AsciiPack_pack (int argc, VALUE* argv)
 	VALUE self = Packer_alloc(cAsciiPack_Packer);
 
 	PACKER(self, ptr);
-
 	if (!ptr) {
 		rb_raise(rb_eArgError, "unallocated packer");
 	}
@@ -504,7 +633,9 @@ AsciiPack_pack (int argc, VALUE* argv)
 
 	Packer_write_value(ptr, v);
 
-	str = rb_str_new(PACKER_BUFFER(ptr)->mem, PACKER_BUFFER(ptr)->seek - PACKER_BUFFER(ptr)->mem);
+	str = Packer_write_to_s(ptr);
+
+	Packer_write_clear(ptr);
 	return str;
 }
 

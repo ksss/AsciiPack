@@ -6,14 +6,43 @@
 
 #include <stdlib.h>
 
+/*
+ * packer:
+ * |      - memsize -      |
+ * +-----------------------+
+ * |     ||           |    |
+ * +-----------------------+
+ * ^mem  ^(buffer)    ^mem_end
+ *
+ * main write strings memory.
+ * realloc when will write over size string.
+ * if will write too large stiring,
+ * it is skip and continue write from mem_end.
+ *
+ *
+ * buffer:
+ * +--------------------------+
+ * | buffer(too large string) |
+ * +--------------------------+ ... 
+ * ^begin                     ^end
+ *
+ * too large string buffer to use Copy-on-Write.
+ * buffer->next look packer or an another buffer.
+ */
+
 struct buffer {
-	char* mem;
-	char* seek;
+	char* begin;
+	char* end;
+	unsigned int is_reference:1;
+	struct buffer* next;
 };
 typedef struct buffer buffer_t;
 
 struct packer {
-	buffer_t buffer;
+	char* mem;
+	char* mem_end;
+	buffer_t* buffer;
+	buffer_t* start;
 	size_t memsize;
 };
 typedef struct packer packer_t;
@@ -27,7 +56,7 @@ union unegative_int {
 	int64_t i64;
 };
 
-#define MEMSIZE_INIT 128
+#define MEMSIZE_INIT (1024*128)
 
 #define PACKER(from, name) \
 	packer_t* name; \
@@ -35,8 +64,6 @@ union unegative_int {
 	if (name == NULL) { \
 		rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be.'"); \
 	}
-
-#define PACKER_BUFFER(p) (&(p)->buffer)
 
 #include "ruby.h"
 
