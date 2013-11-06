@@ -158,9 +158,8 @@ Value abide IEEE 754 format.
 
 ## Comparison
 
-  |Serializer|Length|Speed|Readability|Writability
-  |---|---|---|---|---|
-  |JSON|×|△|○|○|
-  |MessagePack|○|○|×|×|
-  |AsciiPack|△|○|△|△|
-</table>
+|Serializer|Length|Speed|Readability|Writability|
+|---|---|---|---|---|
+|JSON|×|△|○|○|
+|MessagePack|○|○|×|×|
+|AsciiPack|△|○|△|△|
