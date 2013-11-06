@@ -318,16 +318,13 @@ Unpacker_clear (VALUE self)
 }
 
 static VALUE
-AsciiPack_unpack (int argc, VALUE *argv)
+AsciiPack_unpack (int argc, VALUE *argv, VALUE self)
 {
-	VALUE v = argv[0];
-	VALUE self = Unpacker_alloc(cAsciiPack_Unpacker);
-
-	UNPACKER(self, ptr);
-
-	Unpacker_buffer_feed(ptr, v);
-
-	return Unpacker_buffer_read(ptr);
+	VALUE unpacker = rb_funcall(cAsciiPack_Unpacker, rb_intern("new"), 0);
+	rb_funcall(unpacker, rb_intern("feed"), 1, argv[0]);
+	VALUE res = rb_funcall(unpacker, rb_intern("read"), 0);
+	rb_funcall(unpacker, rb_intern("clear"), 0);
+	return res;
 }
 
 void

@@ -48,8 +48,8 @@ end
 puts("|object|" + reports(0).keys.join("|") + "|")
 puts("|---|" + reports(0).keys.map{"---:"}.join("|") + "|")
 
-map16 = {}
-0x10000.times {|i| map16[i.to_s] = 0 }
+map32 = {}
+0x10000.times {|i| map32[i.to_s] = 0 }
 
 tt = Time.now
 {
@@ -57,7 +57,7 @@ tt = Time.now
   "str (1KB)" => ['a' * 1024],
   "str (1MB)" => ['a' * 1024*1024],
   "str (100MB)" => ['a' * 100*1024*1024],
-  "map 32" => map16,
+  "map 32" => map32,
   "array 32" => Array.new(0x10000,0),
 }.each { |key, value|
   json_asciipack key, value
