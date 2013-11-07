@@ -22,7 +22,7 @@
  *
  * tag:
  * +--------------------------+
- * | tag(too large string) |
+ * |  tag(too large string)   |
  * +--------------------------+ ... 
  * ^begin                     ^end
  *
