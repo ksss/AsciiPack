@@ -327,7 +327,6 @@ AsciiPack_unpack (int argc, VALUE *argv, VALUE self)
 
 	rb_funcall(unpacker, rb_intern("feed"), 1, argv[0]);
 	res = rb_funcall(unpacker, rb_intern("read"), 0);
-	rb_funcall(unpacker, rb_intern("clear"), 0);
 	return res;
 }
 
