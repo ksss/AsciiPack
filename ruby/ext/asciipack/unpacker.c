@@ -280,11 +280,13 @@ Unpacker_read (VALUE self)
 static void
 Unpacker_buffer_feed (unpacker_t* ptr, VALUE obj)
 {
+	char* p;
+
 	if (rb_type(obj) != T_STRING) {
 		rb_raise(rb_eArgError, "can not unpack object");
 	}
 
-	char* p = RSTRING_PTR(obj);
+	p = RSTRING_PTR(obj);
 
 	ptr->buffer = p;
 	ptr->ch = p;
@@ -320,9 +322,11 @@ Unpacker_clear (VALUE self)
 static VALUE
 AsciiPack_unpack (int argc, VALUE *argv, VALUE self)
 {
+	VALUE res;
 	VALUE unpacker = rb_funcall(cAsciiPack_Unpacker, rb_intern("new"), 0);
+
 	rb_funcall(unpacker, rb_intern("feed"), 1, argv[0]);
-	VALUE res = rb_funcall(unpacker, rb_intern("read"), 0);
+	res = rb_funcall(unpacker, rb_intern("read"), 0);
 	rb_funcall(unpacker, rb_intern("clear"), 0);
 	return res;
 }
