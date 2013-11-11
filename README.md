@@ -166,4 +166,6 @@ Value abide IEEE 754 format.
 
 ## Demo
 
-Interactive demo site (using [https://github.com/ksss/AsciiPack/blob/master/js/asciipack.js](/js/asciipack.js)) [http://ksss.github.io/AsciiPack/](http://ksss.github.io/AsciiPack/)
+Interactive demo site
+(using [/js/asciipack.js](https://github.com/ksss/AsciiPack/blob/master/js/asciipack.js))
+[http://ksss.github.io/AsciiPack/](http://ksss.github.io/AsciiPack/)
