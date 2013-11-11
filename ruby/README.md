@@ -23,6 +23,8 @@ p unpacked #=> {"compact"=>true,"binary"=>0}
 gem install asciipack
 ```
 
+demo site [http://ksss.github.io/AsciiPack/](http://ksss.github.io/AsciiPack/)
+
 see also [https://github.com/ksss/AsciiPack/blob/master/README.md](https://github.com/ksss/AsciiPack/blob/master/README.md)
 
 bench mark [https://gist.github.com/ksss/7336517](https://gist.github.com/ksss/7336517)
