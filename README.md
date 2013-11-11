@@ -163,3 +163,7 @@ Value abide IEEE 754 format.
 |JSON|×|△|○|○|
 |MessagePack|○|○|×|×|
 |AsciiPack|△|○|△|△|
+
+## Demo
+
+Interactive demo site (using [https://github.com/ksss/AsciiPack/blob/master/js/asciipack.js](/js/asciipack.js)) [http://ksss.github.io/AsciiPack/](http://ksss.github.io/AsciiPack/)

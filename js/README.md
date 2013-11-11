@@ -29,4 +29,6 @@ npm install asciipack
 <script src="asciipack.js"></script>
 ```
 
+demo site [http://ksss.github.io/AsciiPack/](http://ksss.github.io/AsciiPack/)
+
 see also [https://github.com/ksss/AsciiPack/blob/master/README.md](https://github.com/ksss/AsciiPack/blob/master/README.md)
