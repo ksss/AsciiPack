@@ -62,18 +62,60 @@ to_i16all (unpacker_t* ptr, int len)
 	return ret;
 }
 
-static uint64_t
-Unpacker_int (unpacker_t* ptr, size_t len)
+static int8_t
+Unpacker_int4 (unpacker_t* ptr)
 {
-	size_t n = len;
-	char* head = ptr->ch;
-	uint64_t base = 1;
-	uint64_t ret = to_i16all(ptr, len);
+	int8_t ret = to_i16(*ptr->ch++);
 
-	if ('8' <= *head) {
-		ret -= (base << (n * 4));
+	if (8 <= ret) {
+		return ret - (1 << 4);
+	} else {
+		return ret;
 	}
-	return ret;
+}
+
+static int8_t
+Unpacker_int8 (unpacker_t* ptr)
+{
+	uint8_t ret = to_i16all(ptr, 2);
+	union {
+		uint8_t uint8;
+		int8_t int8;
+	} cb = {ret};
+	return cb.int8;
+}
+
+static int16_t
+Unpacker_int16 (unpacker_t* ptr)
+{
+	uint16_t ret = to_i16all(ptr, 4);
+	union {
+		uint16_t uint16;
+		int16_t int16;
+	} cb = {ret};
+	return cb.int16;
+}
+
+static int32_t
+Unpacker_int32 (unpacker_t* ptr)
+{
+	uint32_t ret = to_i16all(ptr, 8);
+	union {
+		uint32_t uint32;
+		int32_t int32;
+	} cb = {ret};
+	return cb.int32;
+}
+
+static uint64_t
+Unpacker_int64 (unpacker_t* ptr)
+{
+	uint64_t ret = to_i16all(ptr, 16);
+	union {
+		uint64_t uint64;
+		int64_t int64;
+	} cb = {ret};
+	return cb.int64;
 }
 
 static uint64_t
@@ -135,23 +177,23 @@ Unpacker_buffer_read (unpacker_t* ptr)
 
 	switch (*ptr->ch++) {
 		case 'a': // int 4
-			num = Unpacker_int(ptr, 1);
+			num = Unpacker_int4(ptr);
 			return INT2FIX(num);
 
 		case 'b': // int 8
-			num = Unpacker_int(ptr, 2);
+			num = Unpacker_int8(ptr);
 			return INT2FIX(num);
 
 		case 'c': // int 16
-			num = Unpacker_int(ptr, 4);
+			num = Unpacker_int16(ptr);
 			return INT2FIX(num);
 
 		case 'd': // int 32
-			num = Unpacker_int(ptr, 8);
+			num = Unpacker_int32(ptr);
 			return LONG2NUM(num);
 
 		case 'e': // int 64
-			num = Unpacker_int(ptr, 16);
+			num = Unpacker_int64(ptr);
 			return rb_ll2inum(num);
 
 		case 'g': // uint 8
