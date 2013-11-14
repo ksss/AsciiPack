@@ -13,12 +13,21 @@ describe "AsciiPack:memory" do
 
   def check (obj)
     packer = AsciiPack::Packer.new
+    unpacker = AsciiPack::Unpacker.new
+
     obj.each {|i|
       packer.write i
       GC.start
-      expect(AsciiPack.unpack(packer.to_s)).to eq(i)
+      ap = packer.to_s
+      GC.start
+      unpacker.feed ap
+      GC.start
+      expect(unpacker.read).to eq(i)
       GC.start
       packer.clear
+      GC.start
+      unpacker.clear
+      GC.start
       expect(packer.to_s).to eq("")
     }
     expect(AsciiPack.unpack(obj.to_asciipack)).to eq(obj)
