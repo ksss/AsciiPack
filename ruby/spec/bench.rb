@@ -18,7 +18,7 @@ def memoryusage()
       return line.to_i / 1024.0
     end
   end
-  return -1;
+  0
 end
 
 def reports
