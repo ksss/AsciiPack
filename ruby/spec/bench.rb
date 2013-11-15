@@ -9,7 +9,8 @@ require 'json'
 require 'msgpack'
 
 def memoryusage()
-  status = `cat /proc/#{$$}/status`
+  status = `cat /proc/#{$$}/status 2> /dev/null`
+  return 0 if status == ""
   lines = status.split("\n")
   lines.each do |line|
     if line =~ /^VmRSS:/
