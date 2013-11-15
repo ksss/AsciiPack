@@ -8,65 +8,58 @@ require 'asciipack'
 require 'json'
 require 'msgpack'
 
-def count
-  1
+def memoryusage()
+  status = `cat /proc/#{$$}/status`
+  lines = status.split("\n")
+  lines.each do |line|
+    if line =~ /^VmRSS:/
+      line.gsub!(/.*:\s*(\d+).*/, '\1')
+      return line.to_i / 1024.0
+    end
+  end
+  return -1;
 end
 
-def reports (obj)
-  obj =[obj] * 1
-  json = obj.to_json
-  ap = AsciiPack.pack obj
-  ms = Marshal.dump obj
-  msg = MessagePack.pack obj
+def reports
+  map32 = {}
+  0x10000.times {|i| map32[i.to_s] = 0 }
 
   {
-    "AsciiPack.pack" => lambda { AsciiPack.pack obj },
-    "AsciiPack.unpack" => lambda { AsciiPack.unpack ap },
-    "MessagePack.pack" => lambda { MessagePack.pack obj },
-    "MessagePack.unpack" => lambda { MessagePack.unpack msg },
-    "JSON.generate" => lambda { obj.to_json },
-    "JSON.parse" => lambda { JSON.parse json },
-    "Marshal.dump" => lambda { Marshal.dump obj },
-    "Marshal.load" => lambda { Marshal.load ms },
+    "uint64" => [0xffffffffffffffff] * 10000,
+    "float64" => [1.0/3.0] * 10000,
+    "str(1KB)" => ['a' * 1024],
+    "str(1MB)" => ['a' * 1024*1024],
+    "str(100MB)" => ['a' * 100*1024*1024],
+    "map32" => map32,
+    "array32" => Array.new(0x10000,0),
   }
 end
-
-def json_asciipack(name, obj)
-  print("|" + name + "|")
-
-  results = []
-  reports(obj).each { |_, func|
-    t = Time.now
-    count.times {
-      func.call
-    }
-    results << "%.6f" % ((Time.now - t) * 1000)
-  }
-  puts results.join("|") + "|"
-end
-
-puts("|object|" + reports(0).keys.join("|") + "|")
-puts("|---|" + reports(0).keys.map{"---:"}.join("|") + "|")
-
-map32 = {}
-0x10000.times {|i| map32[i.to_s] = 0 }
+puts "results of [bench.rb](https://github.com/ksss/AsciiPack/blob/master/ruby/spec/bench.rb)"
+puts ""
+puts "|RUBY_VERSION:#{RUBY_VERSION}|" + reports.keys.join('|') + "|memory|"
+puts "|---|" + reports.keys.map{"---:"}.join("|") + "|---:|"
 
 tt = Time.now
-{
-  "uint 64" => [0xffffffffffffffff] * 10000,
-  "float 64" => [1.0/3.0] * 10000,
-  "str (1KB)" => ['a' * 1024],
-  "str (1MB)" => ['a' * 1024*1024],
-  "str (100MB)" => ['a' * 100*1024*1024],
-  "map 32" => map32,
-  "array 32" => Array.new(0x10000,0),
-}.each { |key, value|
-  json_asciipack key, value
-}
 
-puts "\n"
-puts "RUBY_VERSION:#{RUBY_VERSION}"
-puts "count:#{count}"
-puts "unit:/ms"
-puts 'total:' + (Time.now - tt).to_s + 's'
-
+[
+  ["AsciiPack.pack", lambda{|obj| AsciiPack.pack obj}, lambda{|obj| obj}],
+  ["AsciiPack.unpack", lambda{|obj| AsciiPack.unpack obj}, lambda{|obj| AsciiPack.pack(obj)}],
+  ["MessagePack.pack", lambda{|obj| MessagePack.pack obj}, lambda{|obj| obj}],
+  ["MessagePack.unpack", lambda{|obj| MessagePack.unpack obj}, lambda{|obj| MessagePack.pack(obj)}],
+  ["JSON.dump", lambda{|obj| JSON.dump obj}, lambda{|obj| obj}],
+  ["JSON.load", lambda{|obj| JSON.load obj}, lambda{|obj| JSON.dump(obj)}],
+  ["Marshal.dump", lambda{|obj| Marshal.dump obj}, lambda{|obj| obj}],
+  ["Marshal.load", lambda{|obj| Marshal.load obj}, lambda{|obj| Marshal.dump(obj)}],
+].each do |title, fn, args|
+  print "|#{title}|"
+  GC.start
+  mem = memoryusage
+  reports.each do |name, value|
+    arg = args.call(value)
+    t = Time.now
+    fn.call(arg)
+    print "%.6f|" % (Time.now - t)
+  end
+  print "%.3fMB|" % (memoryusage - mem)
+  puts ""
+end
